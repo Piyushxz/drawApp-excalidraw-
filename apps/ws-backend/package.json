@@ -1,0 +1,17 @@
+{
+  "name": "ws-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc -b",
+    "dev":"node dist/index.js"
+  },
+  "dependencies": {
+    "@repo/typescript-config":"workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
