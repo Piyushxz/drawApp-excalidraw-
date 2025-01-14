@@ -1,5 +1,5 @@
 {
-  "name": "db",
+  "name": "@repo/db",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,6 +9,9 @@
     "start": "node index.js",
     "dev": "npm run build && npm run start"
   },
+  "exports":{
+    "client":"./src/index.ts"
+  },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"
   },
@@ -16,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "6.2.1",
     "prisma": "^6.2.1"
   }
 }
