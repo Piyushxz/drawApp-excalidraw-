@@ -10,7 +10,7 @@
     "dev": "npm run build && npm run start"
   },
   "exports":{
-    "client":"./src/index.ts"
+    "./client":"./src/index.ts"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"
