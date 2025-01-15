@@ -35,12 +35,14 @@ app.post("/signup",async (req,res)=>{
         res.status(200).json({message:"User created successfully!"})
     }catch(e){
         res.status(500).json({message:"Could no signUp"})
+        console.log(e)
     }
 
 })
 app.post("/signin",async (req,res)=>{
 
     const data = signin.safeParse(req.body)
+    console.log(data)
     if(!data.success){
         res.status(400).json({message:"Invalid format"})
         return;
@@ -72,13 +74,31 @@ app.post("/signin",async (req,res)=>{
     }
 })
 
-app.post("/createroom",middleware,(req,res)=>{
-    const userId = req.body.userId;
+app.post("/createroom",middleware,async (req,res)=>{
+    const userId = req.userId;
+
+    if (!userId) {
+         res.status(400).json({ message: "User not authenticated" });
+         return
+      }
     
-    const data = createRoomSchema.safeParse(req.body)
-    if(!data.success){
+    const parsedData = createRoomSchema.safeParse(req.body)
+    if(!parsedData.success){
         res.status(400).json({message:"Invalid format"})
         return;
+    }
+
+    try{
+        const room = await prismaClient.room.create({
+            data:{
+                slug:parsedData.data.roomName,
+                adminId:userId
+            }
+        })
+        res.status(200).json({message:`${parsedData.data.roomName} created!`,id:room.id})
+    }
+    catch(e){
+        res.status(500).json({message:"Room already exists."})
     }
 })
 
