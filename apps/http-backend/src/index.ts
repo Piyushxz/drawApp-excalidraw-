@@ -102,6 +102,38 @@ app.post("/createroom",middleware,async (req,res)=>{
     }
 })
 
+app.get("/chats/:roomId",async (req,res)=>{
 
+    const roomId = Number(req.params.roomId);
+
+    try{
+        const room = await prismaClient.room.findFirst({
+            where:{
+                id:roomId
+            }
+        })
+
+        if(!room){
+            res.status(404).json({message:"Could Not find room"})
+            return;
+        }
+        const chats = await prismaClient.chat.findMany({
+            where:{
+                roomId:roomId
+            },
+            orderBy:{
+                id:"desc"
+            },
+            take:50
+            
+        })
+    
+        res.json({chats})
+
+    }catch(e){
+        res.status(500).json({message:"Could not get chats"})
+    }
+
+})
 
 app.listen(3008)
