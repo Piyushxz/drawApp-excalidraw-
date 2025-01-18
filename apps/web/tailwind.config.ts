@@ -63,7 +63,8 @@ export default {
   			manrope: [
   				'Manrope',
   				'sans-serif'
-  			]
+  			],
+			  satoshi: ["Satoshi", "sans-serif"], 
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
