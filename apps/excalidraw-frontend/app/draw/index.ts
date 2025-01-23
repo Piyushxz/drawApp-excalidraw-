@@ -1,3 +1,5 @@
+import { BACKEND_URL } from "@/config";
+import axios from "axios";
 type Shape = {
     type:"rect",
     x:number,
@@ -14,15 +16,19 @@ type Shape = {
 
 }
    
-const allShapes :Shape[]=[]
 
 
-export function initDraw(canvas:HTMLCanvasElement){
+export async function initDraw(canvas:HTMLCanvasElement,roomId:string){
     const ctx = canvas?.getContext('2d')
+
+    const allShapes :Shape[]= await getExisitingShapes(roomId)
+
 
     if(!ctx){
         return;
     }
+    clearCanvas(allShapes,canvas,ctx);
+
     ctx?.strokeRect(25,25,100,100);
 
     let clicked = false;
@@ -69,4 +75,16 @@ function clearCanvas(allShapes:Shape[],canvas:HTMLCanvasElement,ctx:CanvasRender
             ctx?.strokeRect(shape.x,shape.y,shape.width,shape.height)
         }
     })
+}
+
+async function getExisitingShapes(roomId:string) {
+    const res = await axios.get(`${BACKEND_URL}/chats/${roomId}`)
+    const messages =  res.data.chats
+
+    const shapes = messages.map((x:{message:string})=>{
+        const messageData = JSON.parse(x.message)
+        return messageData
+    })
+
+    return shapes;
 }
