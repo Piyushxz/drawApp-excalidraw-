@@ -18,15 +18,26 @@ type Shape = {
    
 
 
-export async function initDraw(canvas:HTMLCanvasElement,roomId:string){
+export async function initDraw(canvas:HTMLCanvasElement,roomId:string,socket:WebSocket){
     const ctx = canvas?.getContext('2d')
-
-    const allShapes :Shape[]= await getExisitingShapes(roomId)
-
 
     if(!ctx){
         return;
     }
+    const allShapes :Shape[]= await getExisitingShapes(roomId)
+    console.log(allShapes)
+    socket.onmessage=(event)=>{
+        const parsedMessage = JSON.parse(event.data)
+
+        if(parsedMessage.type ==="chat"){
+            const shape = parsedMessage.message
+            allShapes.push(shape)
+            clearCanvas(allShapes,canvas,ctx);
+
+        }
+    }
+
+
     clearCanvas(allShapes,canvas,ctx);
 
     ctx?.strokeRect(25,25,100,100);
@@ -45,15 +56,25 @@ export async function initDraw(canvas:HTMLCanvasElement,roomId:string){
         const width = e.clientX - startX;
         const height = e.clientY - startY;
 
-        allShapes.push({
+        const shape:Shape={
             type:"rect",
             x:startX,
             y:startY,
             width,
             height
-        })
-    })
+        }
+        allShapes.push(shape)
+
+
+        socket.send(JSON.stringify({
+            type:'chat',
+            message:JSON.stringify({shape})
+        }))
+    }
+    )
+
     canvas?.addEventListener('mousemove',(e)=>{
+    
         if(clicked){
             const width = e.clientX - startX;
             const height = e.clientY - startY;
@@ -62,6 +83,11 @@ export async function initDraw(canvas:HTMLCanvasElement,roomId:string){
             clearCanvas(allShapes,canvas,ctx);
             ctx.strokeStyle = "rgba(255,255,255)"
             ctx?.strokeRect(startX,startY,width,height)
+
+
+
+
+            
         }
     })
 }
