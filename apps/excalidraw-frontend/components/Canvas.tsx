@@ -1,8 +1,9 @@
 "use client"
 import { useEffect,useRef } from "react"
 import { initDraw } from "../draw"
-export default function Canvas({roomId,socket}:{roomId:string,socket:WebSocket}){
+export default function ClientCanvas({roomId,socket}:{roomId:string,socket:WebSocket}){
     const cavasRef = useRef<HTMLCanvasElement>(null)
+    console.log("Mounted")
     useEffect(()=>{
         const canvas = cavasRef.current
      
