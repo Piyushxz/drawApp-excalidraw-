@@ -1,8 +1,8 @@
-import { Shape } from "../ShapeOptionBar"
+import { Tool } from "../ShapeOptionBar"
 export interface iconType{
     size:"sm" | "md" | "lg",
     onClick :()=>void,
-    selectedTool:Shape,
+    selectedTool:Tool,
 }
 
 export const iconStyles={
