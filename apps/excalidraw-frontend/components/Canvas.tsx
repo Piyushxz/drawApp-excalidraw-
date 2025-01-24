@@ -11,8 +11,8 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
     console.log("Mounted");
     useEffect(()=>{
         
-        game?.setShape(selectedTool)
-    },[selectedTool,game])
+        game?.setTool(selectedTool)
+    },[selectedTool])
     console.log("canvas",selectedTool)
     useEffect(() => {
         if(canvasRef.current){
