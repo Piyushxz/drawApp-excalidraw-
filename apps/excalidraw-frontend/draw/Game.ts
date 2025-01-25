@@ -71,6 +71,7 @@ export class Game {
 
             if (message.type == "chat") {
                 const parsedShape = JSON.parse(message.message)
+                console.log("parsedSHape",parsedShape)
                 this.existingShapes.push(parsedShape.shape)
                 this.clearCanvas();
             }
@@ -97,18 +98,17 @@ export class Game {
             {
                 console.log("rendering pencil",shape);
 
-                for(let i = 0 ; i < this.pencilPath.length-1;i++){
+                for(let i = 0 ; i < shape.points.length-1;i++){
                     this.ctx.beginPath();
-                    this.ctx.moveTo(this.pencilPath[i].x,this.pencilPath[i].y)
-                    this.ctx.lineTo(this.pencilPath[i+1].x,this.pencilPath[i+1].y)
+                    this.ctx.moveTo(shape.points[i].x,shape.points[i].y)
+                    this.ctx.lineTo(shape.points[i+1].x,shape.points[i+1].y)
                     this.ctx.lineWidth = 2;
                     this.ctx.stroke();
 
 
 
                 }
-                this.pencilPath = []; 
-
+                
 
             }
         })
@@ -151,20 +151,21 @@ export class Game {
                 points:this.pencilPath
             }
             console.log("pencil inserting",shape)
+            this.pencilPath=[]
         }
 
         if (!shape) {
             return;
         }
 
-        this.existingShapes.push(shape)
+         this.existingShapes.push(shape)
 
-         this.socket.send(JSON.stringify({
+          this.socket.send(JSON.stringify({
              type: "chat",
              message: JSON.stringify({
                 shape
             }),
-            roomId: this.roomId
+           roomId: this.roomId
         }))
     }
     mouseMoveHandler = (e:MouseEvent) => {
@@ -188,19 +189,19 @@ export class Game {
                 this.ctx.closePath();                
             }
             else if(selectedTool === 'pencil'){
-                let currentX = e.clientX;
-
-                let currentY = e.clientY;
-                this.pencilPath.push({x:currentX,y:currentY})
-                console.log("Pencil path",this.pencilPath)
+                const currentX = e.clientX;
+                const currentY = e.clientY;
+            
+                this.pencilPath.push({ x: currentX, y: currentY });
+            
                 this.ctx.beginPath();
-                this.ctx.moveTo(this.startX, this.startY);
-                this.ctx.lineTo(currentX, currentY);
+                for (let i = 0; i < this.pencilPath.length - 1; i++) {
+                    this.ctx.moveTo(this.pencilPath[i].x, this.pencilPath[i].y);
+                    this.ctx.lineTo(this.pencilPath[i + 1].x, this.pencilPath[i + 1].y);
+                }
                 this.ctx.lineWidth = 2;
                 this.ctx.stroke();
-    
-                this.startX = currentX;
-                this.startY = currentY;
+                this.ctx.closePath();
 
             }
         }
