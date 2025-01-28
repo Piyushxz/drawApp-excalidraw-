@@ -19,7 +19,22 @@ type Shape = {
 } | {
     type: "pencil";
     points : Point[]
+} |
+{ 
+    type :"diamond";
+    x1:Number,
+    y1:Number,
+    x2:Number,
+    y2:Number,
+    x3:Number,
+    y3:Number,
+    x4:Number,
+    y4:Number,
+    
+    
+
 }
+
 
 export class Game {
 
@@ -55,7 +70,7 @@ export class Game {
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler)
     }
 
-    setTool(tool: "circle" | "pencil" | "rect") {
+    setTool(tool: "circle" | "pencil" | "rect" | "diamond") {
         this.selectedTool = tool;
     }
 

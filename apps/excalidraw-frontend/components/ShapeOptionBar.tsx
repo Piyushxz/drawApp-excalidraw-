@@ -1,9 +1,9 @@
 "use client"
-import { useEffect, useState } from "react";
 import Circle from "./icons/Circle";
 import Pencil from "./icons/Pencil";
 import Rectangle from "./icons/Rectangle";
-export type Tool= "rect" | "pencil" | "circle"
+import Diamond from "./icons/Diamond";
+export type Tool= "rect" | "pencil" | "circle" | "diamond"
 
 
 
@@ -31,6 +31,11 @@ export default function ShapeOptionBar({
             selectedTool={selectedTool}
             size="lg"
             onClick={() => setSelectedTool("pencil")}
+          />
+            <Diamond
+            selectedTool={selectedTool}
+            size="lg"
+            onClick={() => setSelectedTool("diamond")}
           />
         </div>
       </div>
