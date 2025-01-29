@@ -5,6 +5,14 @@ interface Point {
     y:number
 }
 
+interface Diamond{
+    P1:{x:number,y:number},
+    P2:{x:number,y:number},
+    P3:{x:number,y:number},
+    P4:{x:number,y:number},
+
+}
+
 type Shape = {
     type: "rect";
     x: number;
@@ -22,14 +30,14 @@ type Shape = {
 } |
 { 
     type :"diamond";
-    x1:Number,
-    y1:Number,
-    x2:Number,
-    y2:Number,
-    x3:Number,
-    y3:Number,
-    x4:Number,
-    y4:Number,
+    x1:number,
+    y1:number,
+    x2:number,
+    y2:number,
+    x3:number,
+    y3:number,
+    x4:number,
+    y4:number,
     
     
 
@@ -47,6 +55,7 @@ export class Game {
     private startY = 0;
     private pencilPath : Point[] = []
     private selectedTool: Tool = "circle";
+    private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
 
     socket: WebSocket;
 
@@ -126,6 +135,15 @@ export class Game {
                 
 
             }
+            else if(shape.type === 'diamond'){
+                this.ctx.beginPath();
+                this.ctx.moveTo(shape.x1, shape.y1);
+                this.ctx.lineTo(shape.x2, shape.y2);
+                this.ctx.lineTo(shape.x3, shape.y3);
+                this.ctx.lineTo(shape.x4, shape.y4);
+                this.ctx.closePath();
+                this.ctx.stroke();
+            }
         })
     }
 
@@ -167,6 +185,22 @@ export class Game {
             }
             console.log("pencil inserting",shape)
             this.pencilPath=[]
+        }
+
+        else if(selectedTool === 'diamond'){
+            console.log("diamong",shape)
+            shape = {
+                type:'diamond',
+                x1:this.diamondCoords.P1.x,
+                y1:this.diamondCoords.P1.y,
+                x2:this.diamondCoords.P2.x,
+                y2:this.diamondCoords.P2.y,
+                x3:this.diamondCoords.P3.x,
+                y3:this.diamondCoords.P3.y,
+                x4:this.diamondCoords.P4.x,
+                y4:this.diamondCoords.P4.y
+            }
+            this.diamondCoords =  {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
         }
 
         if (!shape) {
@@ -217,6 +251,25 @@ export class Game {
                 this.ctx.lineWidth = 2;
                 this.ctx.stroke();
                 this.ctx.closePath();
+
+            }else if(selectedTool === 'diamond'){
+                const centerX = this.startX + width / 2;
+                const centerY = this.startY + height / 2;
+    
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, this.startY); // Top point
+                this.ctx.lineTo(this.startX, centerY); // Left point
+                this.ctx.lineTo(centerX, this.startY + height); // Bottom point
+                this.ctx.lineTo(this.startX + width, centerY); // Right point
+                this.ctx.closePath();
+                this.ctx.stroke();
+                this.diamondCoords.P1 = {x:centerX,y:this.startY}
+                this.diamondCoords.P2 = {x:this.startX,y:centerY}
+                this.diamondCoords.P3 = {x:centerX,y:this.startY+height}
+                this.diamondCoords.P4 = {x:this.startX+width,y:centerY}
+                console.log("diamond coors",this.diamondCoords)
+
+                
 
             }
         }
