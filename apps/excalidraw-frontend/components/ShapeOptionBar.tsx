@@ -3,7 +3,8 @@ import Circle from "./icons/Circle";
 import Pencil from "./icons/Pencil";
 import Rectangle from "./icons/Rectangle";
 import Diamond from "./icons/Diamond";
-export type Tool= "rect" | "pencil" | "circle" | "diamond"
+import { Line } from "./icons/Line";
+export type Tool= "rect" | "pencil" | "circle" | "diamond" | "line"
 
 
 
@@ -36,6 +37,11 @@ export default function ShapeOptionBar({
             selectedTool={selectedTool}
             size="lg"
             onClick={() => setSelectedTool("diamond")}
+          />
+            <Line
+            selectedTool={selectedTool}
+            size="lg"
+            onClick={() => setSelectedTool("line")}
           />
         </div>
       </div>

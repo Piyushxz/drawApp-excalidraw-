@@ -5,6 +5,10 @@ interface Point {
     y:number
 }
 
+interface Line{
+    P1:{x:number,y:number},
+    P2:{x:number,y:number},
+}
 interface Diamond{
     P1:{x:number,y:number},
     P2:{x:number,y:number},
@@ -42,6 +46,13 @@ type Shape = {
     
 
 }
+|{
+    type:'line',
+    x1:number,
+    y1:number,
+    x2:number,
+    y2:number
+}
 
 
 export class Game {
@@ -56,7 +67,7 @@ export class Game {
     private pencilPath : Point[] = []
     private selectedTool: Tool = "circle";
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
-
+    private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     socket: WebSocket;
 
     constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
@@ -79,7 +90,7 @@ export class Game {
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler)
     }
 
-    setTool(tool: "circle" | "pencil" | "rect" | "diamond") {
+    setTool(tool: "circle" | "pencil" | "rect" | "diamond" | "line") {
         this.selectedTool = tool;
     }
 
@@ -144,6 +155,13 @@ export class Game {
                 this.ctx.closePath();
                 this.ctx.stroke();
             }
+            else if(shape.type === 'line'){
+                this.ctx.beginPath()
+                this.ctx.moveTo(shape.x1,shape.y1)
+                this.ctx.lineTo(shape.x2,shape.y2)
+                this.ctx.stroke()
+            }
+            
         })
     }
 
@@ -188,7 +206,6 @@ export class Game {
         }
 
         else if(selectedTool === 'diamond'){
-            console.log("diamong",shape)
             shape = {
                 type:'diamond',
                 x1:this.diamondCoords.P1.x,
@@ -203,19 +220,31 @@ export class Game {
             this.diamondCoords =  {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
         }
 
+        else if(selectedTool === 'line'){
+            shape = {
+                type :'line',
+                x1:this.lineCoords.P1.x,
+                y1:this.lineCoords.P1.y,
+                x2:this.lineCoords.P2.x,
+                y2:this.lineCoords.P2.y,
+
+            }
+
+            this.lineCoords = {P1:{x:0,y:0},P2:{x:0,y:0}}
+        }
         if (!shape) {
             return;
         }
 
-         this.existingShapes.push(shape)
+          this.existingShapes.push(shape)
 
           this.socket.send(JSON.stringify({
-             type: "chat",
-             message: JSON.stringify({
-                shape
+              type: "chat",
+              message: JSON.stringify({
+                 shape
             }),
-           roomId: this.roomId
-        }))
+            roomId: this.roomId
+         }))
     }
     mouseMoveHandler = (e:MouseEvent) => {
         if (this.clicked) {
@@ -270,6 +299,16 @@ export class Game {
                 console.log("diamond coors",this.diamondCoords)
 
                 
+
+            }
+            else if(selectedTool === 'line'){
+                this.ctx.beginPath()
+                this.ctx.moveTo(this.startX,this.startY)
+                this.ctx.lineTo(e.clientX,e.clientY)
+                this.ctx.stroke();
+
+                this.lineCoords.P1= {x:this.startX,y:this.startY}
+                this.lineCoords.P2= {x:e.clientX,y:e.clientY}
 
             }
         }
