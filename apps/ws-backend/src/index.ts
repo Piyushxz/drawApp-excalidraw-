@@ -59,13 +59,19 @@ wss.on("connection",(ws,request)=>{
     users.push({userId:userAuthenticated,room:[],ws})
 
     ws.on('message', async(data)=>{
-
-        const parsedData = JSON.parse(data as unknown as string);
+        console.log(data)
+        let parsedData;
+        if (typeof data !== "string") {
+          parsedData = JSON.parse(data.toString());
+        } else {
+          parsedData = JSON.parse(data); // {type: "join-room", roomId: 1}
+        }
+        console.log(parsedData)
 
         if(parsedData.type ==="join_room"){
+            console.log("User joined ",parsedData.roomId)
             const user = users.find(x => x.ws === ws);
             user?.room.push(parsedData.roomId)
-            console.log("User joined")
         }
 
         if(parsedData.type === "leave_room"){
@@ -77,20 +83,29 @@ wss.on("connection",(ws,request)=>{
             user.room = user?.room.filter( x => x === parsedData.roomId)
         }
 
-
+        console.log("message received")
+        console.log(parsedData);
 
         if(parsedData.type === "chat"){
+            console.log(parsedData)
             const roomId = parsedData.roomId;
             const message = parsedData.message;
 
-            await prismaClient.chat.create({
-                data:{
-                    roomId:roomId,
-                    message:message,
-                    userId:userAuthenticated
-                }
-            })
-
+            console.log("Inserting into DB",      {      roomId:Number(roomId),
+            message:message,
+            userId:userAuthenticated})
+            try {
+                await prismaClient.chat.create({
+                  data: {
+                    roomId: Number(parsedData.roomId),
+                    message: parsedData.message,
+                    userId: userAuthenticated,
+                  },
+                });
+                console.log("Message inserted successfully.");
+              } catch (error) {
+                console.error("Error inserting into DB:", error);
+              }
             users.forEach(user => {
                 if (user.room.includes(roomId)){
                     user.ws.send(JSON.stringify({
