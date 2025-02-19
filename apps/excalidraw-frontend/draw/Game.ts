@@ -53,6 +53,13 @@ type Shape = {
     x2:number,
     y2:number
 }
+|{
+   type:'arrow',
+   x1:number,
+   y1:number,
+   x2:number,
+   y2:number
+}
 
 
 export class Game {
@@ -68,6 +75,8 @@ export class Game {
     private selectedTool: Tool = "circle";
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
+    private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
+
     socket: WebSocket;
 
     constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
@@ -80,6 +89,7 @@ export class Game {
         this.init();
         this.initHandlers();
         this.initMouseHandlers();
+        this.clearCanvas()
     }
     
     destroy() {
@@ -90,13 +100,14 @@ export class Game {
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler)
     }
 
-    setTool(tool: "circle" | "pencil" | "rect" | "diamond" | "line") {
+    setTool(tool: "circle" | "pencil" | "rect" | "diamond" | "line" | "arrow") {
         this.selectedTool = tool;
     }
 
     async init() {
         this.existingShapes = await getExisitingShapes(this.roomId);
-        console.log(this.existingShapes);
+        console.log("shape",this.existingShapes);
+
         this.clearCanvas();
     }
 
@@ -160,6 +171,34 @@ export class Game {
                 this.ctx.moveTo(shape.x1,shape.y1)
                 this.ctx.lineTo(shape.x2,shape.y2)
                 this.ctx.stroke()
+            }
+            else if(shape.type === 'arrow'){
+                console.log("rendering arrow",shape)
+                const headlen = 14; // Length of arrowhead
+                const angle = Math.atan2(shape.y2 - shape.y1, shape.x2 - shape.x1);
+            
+                this.ctx.beginPath();
+                this.ctx.lineCap = "round";
+                this.ctx.lineWidth = 2.5; // Adjust for better visibility
+            
+                // Draw main line
+                this.ctx.moveTo(shape.x1, shape.y1);
+                this.ctx.lineTo(shape.x2, shape.y2);
+                
+                // Calculate arrowhead points
+                const arrowX1 = shape.x2 - headlen * Math.cos(angle - Math.PI / 6);
+                const arrowY1 = shape.y2 - headlen * Math.sin(angle - Math.PI / 6);
+                const arrowX2 = shape.x2 - headlen * Math.cos(angle + Math.PI / 6);
+                const arrowY2 = shape.y2 - headlen * Math.sin(angle + Math.PI / 6);
+                
+                // Draw arrowhead
+                this.ctx.moveTo(shape.x2, shape.y2);
+                this.ctx.lineTo(arrowX1, arrowY1);
+                
+                this.ctx.moveTo(shape.x2, shape.y2);
+                this.ctx.lineTo(arrowX2, arrowY2);
+            
+                this.ctx.stroke();
             }
             
         })
@@ -231,6 +270,15 @@ export class Game {
             }
 
             this.lineCoords = {P1:{x:0,y:0},P2:{x:0,y:0}}
+        }
+        else if(selectedTool === 'arrow'){
+            shape = {
+                type:'arrow',
+                x1:this.arrowCoords.P1.x,
+                y1:this.arrowCoords.P1.y,
+                x2:this.arrowCoords.P2.x,
+                y2:this.arrowCoords.P2.y,
+            }
         }
         if (!shape) {
             return;
@@ -311,6 +359,38 @@ export class Game {
                 this.lineCoords.P2= {x:e.clientX,y:e.clientY}
 
             }
+            else if(selectedTool === 'arrow'){
+                const headlen = 14; // Length of arrowhead
+                const angle = Math.atan2(e.clientY - this.startY, e.clientX - this.startX);
+            
+                this.ctx.beginPath();
+                this.ctx.lineCap = "round";
+                this.ctx.lineWidth = 2.5; // Adjust for better visibility
+            
+                // Draw main line
+                this.ctx.moveTo(this.startX, this.startY);
+                this.ctx.lineTo(e.clientX, e.clientY);
+                this.arrowCoords.P1= {x:this.startX,y:this.startY}
+                this.arrowCoords.P2= {x:e.clientX,y:e.clientY}
+                console.log("arrow",this.arrowCoords)
+                
+                // Calculate arrowhead points
+                const arrowX1 = e.clientX - headlen * Math.cos(angle - Math.PI / 6);
+                const arrowY1 = e.clientY - headlen * Math.sin(angle - Math.PI / 6);
+                const arrowX2 = e.clientX - headlen * Math.cos(angle + Math.PI / 6);
+                const arrowY2 = e.clientY - headlen * Math.sin(angle + Math.PI / 6);
+                
+                // Draw arrowhead
+                this.ctx.moveTo(e.clientX, e.clientY);
+                this.ctx.lineTo(arrowX1, arrowY1);
+                
+                this.ctx.moveTo(e.clientX, e.clientY);
+                this.ctx.lineTo(arrowX2, arrowY2);
+            
+                this.ctx.stroke();
+
+            }
+            
         }
     }
 
