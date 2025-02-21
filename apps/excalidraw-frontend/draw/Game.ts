@@ -76,6 +76,7 @@ export class Game {
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
+    private clickedShapeIndex = -1
 
     socket: WebSocket;
 
@@ -100,8 +101,19 @@ export class Game {
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler)
     }
 
-    setTool(tool: "circle" | "pencil" | "rect" | "diamond" | "line" | "arrow") {
+    setTool(tool: Tool) {
         this.selectedTool = tool;
+    }
+    isPointInsideShape(x: number, y: number, shape: Shape): boolean {
+        if (shape.type === "rect") {
+            return x >= shape.x && x <= shape.x + shape.width &&
+                   y >= shape.y && y <= shape.y + shape.height;
+        } else if (shape.type === "circle") {
+            const dx = x - shape.centerX;
+            const dy = y - shape.centerY;
+            return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
+        }
+        return false; // Extend this for other shapes if needed
     }
 
     async init() {
@@ -129,8 +141,9 @@ export class Game {
         this.ctx.fillStyle = "rgba(0, 0, 0)"
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        console.log("")
-        this.existingShapes.map((shape) => {
+        this.existingShapes.map(({shape,id}) => {
+            console.log("render shape ", shape , " id ",id)
+
             if (shape.type === "rect") {
                 this.ctx.strokeStyle = "rgba(255, 255, 255)"
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
@@ -208,6 +221,19 @@ export class Game {
         this.clicked = true
         this.startX = e.clientX
         this.startY = e.clientY
+
+        if(this.selectedTool === 'eraser'){
+            const clickedShapeIndex = this.existingShapes.findIndex(shape => this.isPointInsideShape(e.clientX, e.clientY, shape));
+            console.log("shape index",clickedShapeIndex)
+    
+            if (clickedShapeIndex !== -1) {
+                this.clickedShapeIndex = clickedShapeIndex; // Store the selected shape index
+                console.log("shape index",this.clickedShapeIndex)
+            } else {
+                this.clickedShapeIndex = -1;
+            }
+        }
+
     }
     mouseUpHandler = (e:MouseEvent) => {
         this.clicked = false

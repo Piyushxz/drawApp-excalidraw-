@@ -10,6 +10,12 @@ export async function getExisitingShapes(roomId:string) {
         const messageData = JSON.parse(x.message)
         return messageData.shape
     })
+    const shapes2 = messages.map(({id,message}:{id:number,message:string})=>{
+        const messageData = JSON.parse(message)
+        return {id,shape:messageData.shape
+        }})
+    
 
-    return shapes;
+
+    return shapes2;
 }

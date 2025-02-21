@@ -5,7 +5,8 @@ import Rectangle from "./icons/Rectangle";
 import Diamond from "./icons/Diamond";
 import { Line } from "./icons/Line";
 import { Arrow } from "./icons/Arrow";
-export type Tool= "rect" | "pencil" | "circle" | "diamond" | "line" | "arrow"
+import { Eraser } from "./icons/Eraser";
+export type Tool= "rect" | "pencil" | "circle" | "diamond" | "line" | "arrow" | "eraser"
 
 
 
@@ -18,7 +19,7 @@ export default function ShapeOptionBar({
   }) {
     return (
       <div className="w-screen flex justify-center">
-        <div className="fixed h-12 translate-y-8 bg-white rounded-lg shadow-md px-2 border border-white flex items-center gap-2">
+        <div className="fixed h-14 translate-y-4 bg-[#191919] rounded-lg shadow-lg px-2 border border-gray-600/30 flex items-center gap-2">
           <Rectangle
             selectedTool={selectedTool}
             size="lg"
@@ -49,6 +50,9 @@ export default function ShapeOptionBar({
           size="lg"
           onClick={()=>setSelectedTool("arrow")}
           />
+          <Eraser selectedTool={selectedTool}
+          size="lg"
+          onClick={()=>setSelectedTool("eraser")}/>
         </div>
       </div>
     );
