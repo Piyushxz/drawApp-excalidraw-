@@ -94,8 +94,9 @@ wss.on("connection",(ws,request)=>{
             console.log("Inserting into DB",      {      roomId:Number(roomId),
             message:message,
             userId:userAuthenticated})
+            let shape = null
             try {
-                await prismaClient.chat.create({
+                shape = await prismaClient.chat.create({
                   data: {
                     roomId: Number(parsedData.roomId),
                     message: parsedData.message,
@@ -111,7 +112,44 @@ wss.on("connection",(ws,request)=>{
                     user.ws.send(JSON.stringify({
                         type:"chat",
                         message:message,
+                        id:shape?.id,
                         roomId:roomId
+                    }))
+                }
+            })
+        }
+
+        else if(parsedData.type === "delete_shape"){
+            console.log(parsedData)
+            try{
+                console.log(`deleting ${parsedData.id}}`)
+                await prismaClient.chat.delete({
+                    where:{
+                        id:parsedData.id,
+                        roomId:Number(parsedData.roomId)
+                    }
+                })
+                console.log("deleted succesfully")
+            }
+            catch(e){
+                console.log(e)
+            }
+            console.log(parsedData.sentBy,"<- token")
+
+            users.forEach(user => {
+                if (user.room.includes(parsedData.roomId) &&  parsedData.sentBy!== token){
+                    user.ws.send(JSON.stringify({
+                        type:"delete_shape",
+                        id:parsedData.id,
+                        roomId:parsedData.roomId,
+                        sentBy:parsedData.sentBy
+                    }))
+                }
+                if(parsedData.sentBy === token){
+                    user.ws.send(JSON.stringify({
+                        type:"local_delete_shape",
+                        id:parsedData.id,
+                        sentBy:parsedData.sentBy
                     }))
                 }
             })
