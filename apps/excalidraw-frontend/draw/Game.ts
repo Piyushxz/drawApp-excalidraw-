@@ -1,5 +1,13 @@
 import { Tool } from "@/components/ShapeOptionBar";
 import { getExisitingShapes } from "./util";
+import axios from "axios";
+import { BACKEND_URL } from "@/config";
+import { isPointInsidePolygon, isPointNearLine, isPointNearPencilPath } from "./deleteFunctionality";
+
+interface shapeArrayType{
+    id:number,
+    shape:Shape
+}
 interface Point {
     x:number,
     y:number
@@ -17,7 +25,7 @@ interface Diamond{
 
 }
 
-type Shape = {
+export type Shape = {
     type: "rect";
     x: number;
     y: number;
@@ -66,7 +74,7 @@ export class Game {
 
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
-    private existingShapes: Shape[]
+    private existingShapes: shapeArrayType[]
     private roomId: string;
     private clicked: boolean;
     private startX = 0;
@@ -76,7 +84,7 @@ export class Game {
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
-    private clickedShapeIndex = -1
+    private clickedShapeIndex:any
 
     socket: WebSocket;
 
@@ -108,13 +116,31 @@ export class Game {
         if (shape.type === "rect") {
             return x >= shape.x && x <= shape.x + shape.width &&
                    y >= shape.y && y <= shape.y + shape.height;
-        } else if (shape.type === "circle") {
+        } 
+        else if (shape.type === "circle") {
             const dx = x - shape.centerX;
             const dy = y - shape.centerY;
             return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
+        } 
+        else if (shape.type === "diamond") {
+            return isPointInsidePolygon(x, y, [
+                { x: shape.x1, y: shape.y1 },  // Top
+                { x: shape.x2, y: shape.y2 },  // Right
+                { x: shape.x3, y: shape.y3 },  // Bottom
+                { x: shape.x4, y: shape.y4 }   // Left
+            ]);
+        } 
+        else if (shape.type === "line" || shape.type === "arrow") {
+            return isPointNearLine(x, y, shape.x1, shape.y1, shape.x2, shape.y2);
+        } 
+        else if (shape.type === "pencil") {
+            return isPointNearPencilPath(x, y, shape.points);
         }
-        return false; // Extend this for other shapes if needed
+        return false;
     }
+    
+ 
+    
 
     async init() {
         this.existingShapes = await getExisitingShapes(this.roomId);
@@ -123,14 +149,38 @@ export class Game {
         this.clearCanvas();
     }
 
+      async deleteShape(){
+        console.log("delete called for",this.clickedShapeIndex)
+        this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
+    
+        this.clearCanvas();       
+
+
+        try{
+            console.log(`deleting ${this.clickedShapeIndex.id}`)
+            const response = await axios.delete(`${BACKEND_URL}/deleteshape`,{
+                data: { id: this.clickedShapeIndex},
+                headers:{
+                    token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
+                }
+            })
+
+            console.log(response)
+        }
+        catch(e){
+            console.log(e)
+        }
+    }
     initHandlers() {
         this.socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
 
             if (message.type == "chat") {
+                console.log(message)
+                const id = JSON.parse(message.id)
                 const parsedShape = JSON.parse(message.message)
                 console.log("parsedSHape",parsedShape)
-                this.existingShapes.push(parsedShape.shape)
+                this.existingShapes.push({shape:parsedShape.shape,id})
                 this.clearCanvas();
             }
         }
@@ -217,22 +267,13 @@ export class Game {
         })
     }
 
+
     mouseDownHandler = (e:MouseEvent) => {
+
+
         this.clicked = true
         this.startX = e.clientX
         this.startY = e.clientY
-
-        if(this.selectedTool === 'eraser'){
-            const clickedShapeIndex = this.existingShapes.findIndex(shape => this.isPointInsideShape(e.clientX, e.clientY, shape));
-            console.log("shape index",clickedShapeIndex)
-    
-            if (clickedShapeIndex !== -1) {
-                this.clickedShapeIndex = clickedShapeIndex; // Store the selected shape index
-                console.log("shape index",this.clickedShapeIndex)
-            } else {
-                this.clickedShapeIndex = -1;
-            }
-        }
 
     }
     mouseUpHandler = (e:MouseEvent) => {
@@ -310,7 +351,7 @@ export class Game {
             return;
         }
 
-          this.existingShapes.push(shape)
+        // this.existingShapes.push(shape)
 
           this.socket.send(JSON.stringify({
               type: "chat",
@@ -415,6 +456,21 @@ export class Game {
             
                 this.ctx.stroke();
 
+            }
+            else if(selectedTool === 'eraser'){
+                let indexVal : shapeArrayType | undefined ;
+
+                    indexVal = this.existingShapes.find(({shape}) => 
+                        this.isPointInsideShape(e.clientX, e.clientY, shape)
+                    );
+            
+                    if (indexVal) {
+                        this.clickedShapeIndex = indexVal.id
+                        console.log("index",this.clickedShapeIndex)
+                        this.deleteShape();
+                    }
+                
+        
             }
             
         }
