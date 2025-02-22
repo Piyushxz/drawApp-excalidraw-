@@ -136,6 +136,31 @@ app.get("/chats/:roomId",async (req,res)=>{
     }
 
 })
+
+app.delete("/deleteshape",middleware,async (req,res)=>{
+
+    const userId = req.userId
+    const id = req.body.id
+    if (!userId) {
+        res.status(400).json({ message: "User not authenticated" });
+        return
+     }
+   
+     try{
+
+       const shape = await prismaClient.chat.delete({
+        where:{
+            id:id,
+            
+        }
+       })
+
+       res.status(201).json({message:"Shape deleted ",shape})
+     }catch(e){
+        res.status(500).json({message:"Cound not delete shape"})
+        console.log(e)
+     }
+})
 app.get("/room/:slug",async (req,res)=>{
     const slug = req.params.slug;
 
