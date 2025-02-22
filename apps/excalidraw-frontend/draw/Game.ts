@@ -155,21 +155,18 @@ export class Game {
     
         this.clearCanvas();       
 
+        this.socket.send(JSON.stringify(
+            {
+                type:"delete_shape",
+                id:this.clickedShapeIndex,
+                roomId:this.roomId,
+                sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
+            }
+        )
 
-        try{
-            console.log(`deleting ${this.clickedShapeIndex.id}`)
-            const response = await axios.delete(`${BACKEND_URL}/deleteshape`,{
-                data: { id: this.clickedShapeIndex},
-                headers:{
-                    token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
-                }
-            })
+        )
 
-            console.log(response)
-        }
-        catch(e){
-            console.log(e)
-        }
+
     }
     initHandlers() {
         this.socket.onmessage = (event) => {
@@ -182,6 +179,20 @@ export class Game {
                 console.log("parsedSHape",parsedShape)
                 this.existingShapes.push({shape:parsedShape.shape,id})
                 this.clearCanvas();
+            }
+
+            else if(message.type=='delete_shape'){
+                console.log("delete shape ", message);
+                const token = message.sentBy
+                const id = JSON.parse(message.id)
+
+                this.clickedShapeIndex = id
+                this.deleteShape()
+            }
+            else if(message.type === 'local_delete_shape' ){
+                this.clickedShapeIndex = JSON.parse(message.id)
+                this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
+                this.clearCanvas()
             }
         }
     }
