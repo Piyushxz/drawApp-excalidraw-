@@ -85,6 +85,10 @@ export class Game {
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private clickedShapeIndex:any
+    private clickedShape:shapeArrayType | undefined
+
+    private isDragging = false;
+    private dragOffset = { x: 0, y: 0 };
 
     socket: WebSocket;
 
@@ -274,19 +278,112 @@ export class Game {
             
                 this.ctx.stroke();
             }
-            
+            if (this.clickedShape && this.clickedShape.shape === shape) {
+                this.ctx.strokeStyle = "#0096FF"; // Selection color
+                this.ctx.lineWidth = 2;
+    
+                // **Find the bounding box of the shape**
+                let minX, minY, maxX, maxY;
+    
+                if (shape.type === "rect") {
+                    minX = shape.x;
+                    minY = shape.y;
+                    maxX = shape.x + shape.width;
+                    maxY = shape.y + shape.height;
+                } else if (shape.type === "circle") {
+                    minX = shape.centerX - shape.radius;
+                    minY = shape.centerY - shape.radius;
+                    maxX = shape.centerX + shape.radius;
+                    maxY = shape.centerY + shape.radius;
+                } else if (shape.type === "diamond") {
+                    minX = Math.min(shape.x1, shape.x2, shape.x3, shape.x4);
+                    minY = Math.min(shape.y1, shape.y2, shape.y3, shape.y4);
+                    maxX = Math.max(shape.x1, shape.x2, shape.x3, shape.x4);
+                    maxY = Math.max(shape.y1, shape.y2, shape.y3, shape.y4);
+                } else if (shape.type === "line" || shape.type === "arrow") {
+                    minX = Math.min(shape.x1, shape.x2);
+                    minY = Math.min(shape.y1, shape.y2);
+                    maxX = Math.max(shape.x1, shape.x2);
+                    maxY = Math.max(shape.y1, shape.y2);
+                }
+                let boxSize = Math.max(maxX - minX, maxY - minY);
+                let centerX = (minX + maxX) / 2;
+                let centerY = (minY + maxY) / 2;
+    
+                let squareX = centerX - boxSize / 2;
+                let squareY = centerY - boxSize / 2;
+    
+                // **Draw the square selection box**
+                this.ctx.strokeRect(squareX - 5, squareY - 5, boxSize + 10, boxSize + 10);
+            }
         })
+        
     }
 
-
-    mouseDownHandler = (e:MouseEvent) => {
-
-
-        this.clicked = true
-        this.startX = e.clientX
-        this.startY = e.clientY
-
-    }
+    mouseDownHandler = (e: MouseEvent) => {
+        this.clicked = true;
+        this.startX = e.clientX;
+        this.startY = e.clientY;
+        this.clickedShape = undefined;
+        this.isDragging = false;
+    
+        if (this.selectedTool === "mouse") {
+            let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
+                this.isPointInsideShape(e.clientX, e.clientY, shape)
+            );
+    
+            console.log("shape from mouse", shapeVal);
+    
+            if (shapeVal) {
+                this.clickedShape = shapeVal;
+                this.isDragging = true;
+    
+                switch (shapeVal.shape.type) {
+                    case "rect":
+                        this.dragOffset = {
+                            x: e.clientX - shapeVal.shape.x,
+                            y: e.clientY - shapeVal.shape.y
+                        };
+                        break;
+    
+                    case "diamond":
+                        let centerX = (shapeVal.shape.x1 + shapeVal.shape.x3) / 2;
+                        let centerY = (shapeVal.shape.y1 + shapeVal.shape.y3) / 2;
+    
+                        this.dragOffset = {
+                            x: e.clientX - centerX,
+                            y: e.clientY - centerY
+                        };
+                        break;
+    
+                    case "circle":
+                        this.dragOffset = {
+                            x: e.clientX - shapeVal.shape.centerX,
+                            y: e.clientY - shapeVal.shape.centerY
+                        };
+                        break;
+    
+                    case "line":
+                    case "arrow":
+                        this.dragOffset = {
+                            x: e.clientX - shapeVal.shape.x1,
+                            y: e.clientY - shapeVal.shape.y1
+                        };
+                        break;
+    
+                    case "pencil":
+                        this.dragOffset = {
+                            x: e.clientX - shapeVal.shape.points[0].x,
+                            y: e.clientY - shapeVal.shape.points[0].y
+                        };
+                        break;
+                }
+    
+                this.clearCanvas(); // Redraw with selection box
+            }
+        }
+    };
+    
     mouseUpHandler = (e:MouseEvent) => {
         this.clicked = false
         const width = e.clientX - this.startX;
@@ -485,7 +582,76 @@ export class Game {
             }
             
         }
+
+
+
+
+
+
+
+
+
+
+
+        if (this.isDragging && this.clickedShape  && this.clicked && this.selectedTool === 'mouse') {
+
+            switch (this.clickedShape.shape.type) {
+                case "rect":
+                    this.clickedShape.shape.x = e.clientX - this.dragOffset.x;
+                    this.clickedShape.shape.y = e.clientY - this.dragOffset.y;
+                    break;
+                    case "diamond":
+                        let dxDiamond = e.clientX - this.dragOffset.x;
+                        let dyDiamond = e.clientY - this.dragOffset.y;
+                    
+                        let offsetX = dxDiamond - this.clickedShape.shape.x1;
+                        let offsetY = dyDiamond - this.clickedShape.shape.y1;
+                    
+                        this.clickedShape.shape.x1 += offsetX;
+                        this.clickedShape.shape.y1 += offsetY;
+                        this.clickedShape.shape.x2 += offsetX;
+                        this.clickedShape.shape.y2 += offsetY;
+                        this.clickedShape.shape.x3 += offsetX;
+                        this.clickedShape.shape.y3 += offsetY;
+                        this.clickedShape.shape.x4 += offsetX;
+                        this.clickedShape.shape.y4 += offsetY;
+                        break;
+                    
+    
+                case "circle":
+                    this.clickedShape.shape.centerX = e.clientX - this.dragOffset.x;
+                    this.clickedShape.shape.centerY = e.clientY - this.dragOffset.y;
+                    break;
+    
+                    case "line":
+                        case "arrow":
+                            let moveX = e.clientX - this.dragOffset.x;
+                            let moveY = e.clientY - this.dragOffset.y;
+                        
+                            let lineOffsetX = moveX - this.clickedShape.shape.x1;
+                            let lineOffsetY = moveY - this.clickedShape.shape.y1;
+                        
+                            this.clickedShape.shape.x1 += lineOffsetX;
+                            this.clickedShape.shape.y1 += lineOffsetY;
+                            this.clickedShape.shape.x2 += lineOffsetX;
+                            this.clickedShape.shape.y2 += lineOffsetY;
+                            break;
+                    
+                    
+                            case "pencil":
+                            let moveDeltaX = e.clientX - this.dragOffset.x;
+                            let moveDeltaY = e.clientY - this.dragOffset.y;
+                            
+                            this.clickedShape.shape.points = this.clickedShape.shape.points.map(point => ({
+                                    x: point.x + moveDeltaX - this.clickedShape.shape.points[0].x,
+                                    y: point.y + moveDeltaY - this.clickedShape.shape.points[0].y
+                                }));
+                                break;
+            }
+            this.clearCanvas();
+        }
     }
+    
 
     initMouseHandlers() {
         this.canvas.addEventListener("mousedown", this.mouseDownHandler)
