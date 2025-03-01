@@ -86,6 +86,9 @@ export class Game {
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private clickedShapeIndex:any
     private clickedShape:shapeArrayType | undefined
+    private prevShape:shapeArrayType | undefined
+
+    private shapeChanged:boolean = false
 
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
@@ -162,7 +165,7 @@ export class Game {
         this.socket.send(JSON.stringify(
             {
                 type:"delete_shape",
-                id:this.clickedShapeIndex,
+                shape:this.clickedShape,
                 roomId:this.roomId,
                 sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
             }
@@ -187,7 +190,6 @@ export class Game {
 
             else if(message.type=='delete_shape'){
                 console.log("delete shape ", message);
-                const token = message.sentBy
                 const id = JSON.parse(message.id)
 
                 this.clickedShapeIndex = id
@@ -197,6 +199,30 @@ export class Game {
                 this.clickedShapeIndex = JSON.parse(message.id)
                 this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
                 this.clearCanvas()
+            }else if(message.type === 'update_shape'){
+                const token = message.sentBy
+                console.log("update shape msg rcvd ", message)
+
+                if(token === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0')
+                {
+                    console.log("You sent it !!!")
+                    return;
+                }
+
+
+                let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.shape.id);
+
+                if (shapeIndex !== -1) {
+                    // Update existing shape
+                    this.existingShapes[shapeIndex].shape = message.shape.shape;
+                } else {
+                    // Add new shape if not found
+                    this.existingShapes.push({ id: message.shape.id, shape: message.shape.shape });
+                }
+
+                this.clearCanvas()
+                  
+
             }
         }
     }
@@ -324,6 +350,7 @@ export class Game {
     
             if (shapeVal) {
                 this.clickedShape = shapeVal;
+                this.prevShape = JSON.parse(JSON.stringify(shapeVal));
                 this.isDragging = true;
     
                 switch (shapeVal.shape.type) {
@@ -367,7 +394,7 @@ export class Game {
                         break;
                 }
     
-                this.clearCanvas(); // Redraw with selection box
+                this.clearCanvas(); 
             }
         }
     };
@@ -376,9 +403,27 @@ export class Game {
         this.clicked = false
         const width = e.clientX - this.startX;
         const height = e.clientY - this.startY;
-
+        this.isDragging = false
         const selectedTool = this.selectedTool;
         let shape: Shape | null = null;
+        console.log("clicled",JSON.stringify(this.clickedShape),"clicked",JSON.stringify(this.prevShape))
+
+        let isShapeChanged = JSON.stringify(this.clickedShape) === JSON.stringify(this.prevShape)
+        if(this.selectedTool === 'mouse' && this.clickedShape && !this.isDragging && !isShapeChanged ){
+                console.log("shape changed ", this.clickedShape)
+
+                this.socket.send(JSON.stringify({
+                    type: "update_shape",
+                    message: JSON.stringify({
+                       shape:this.clickedShape
+                  }),
+                  roomId: this.roomId,
+                  sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
+               }))
+               this.shapeChanged = false
+        }
+
+
         if (selectedTool === "rect") {
 
             shape = {
@@ -581,63 +626,62 @@ export class Game {
 
 
 
-        if (this.isDragging && this.clickedShape  && this.clicked && this.selectedTool === 'mouse') {
-
+        if (this.isDragging && this.clickedShape && this.clicked && this.selectedTool === 'mouse') {
             switch (this.clickedShape.shape.type) {
                 case "rect":
                     this.clickedShape.shape.x = e.clientX - this.dragOffset.x;
                     this.clickedShape.shape.y = e.clientY - this.dragOffset.y;
                     break;
-                    case "diamond":
-                        let dxDiamond = e.clientX - this.dragOffset.x;
-                        let dyDiamond = e.clientY - this.dragOffset.y;
-                    
-                        let offsetX = dxDiamond - this.clickedShape.shape.x1;
-                        let offsetY = dyDiamond - this.clickedShape.shape.y1;
-                    
-                        this.clickedShape.shape.x1 += offsetX;
-                        this.clickedShape.shape.y1 += offsetY;
-                        this.clickedShape.shape.x2 += offsetX;
-                        this.clickedShape.shape.y2 += offsetY;
-                        this.clickedShape.shape.x3 += offsetX;
-                        this.clickedShape.shape.y3 += offsetY;
-                        this.clickedShape.shape.x4 += offsetX;
-                        this.clickedShape.shape.y4 += offsetY;
-                        break;
-                    
-    
+        
+                case "diamond":
+                    let dxDiamond = e.clientX - this.dragOffset.x;
+                    let dyDiamond = e.clientY - this.dragOffset.y;
+                
+                    let offsetX = dxDiamond - this.clickedShape.shape.x1;
+                    let offsetY = dyDiamond - this.clickedShape.shape.y1;
+                
+                    this.clickedShape.shape.x1 += offsetX;
+                    this.clickedShape.shape.y1 += offsetY;
+                    this.clickedShape.shape.x2 += offsetX;
+                    this.clickedShape.shape.y2 += offsetY;
+                    this.clickedShape.shape.x3 += offsetX;
+                    this.clickedShape.shape.y3 += offsetY;
+                    this.clickedShape.shape.x4 += offsetX;
+                    this.clickedShape.shape.y4 += offsetY;
+                    break;
+        
                 case "circle":
                     this.clickedShape.shape.centerX = e.clientX - this.dragOffset.x;
                     this.clickedShape.shape.centerY = e.clientY - this.dragOffset.y;
                     break;
-    
-                    case "line":
-                        case "arrow":
-                            let moveX = e.clientX - this.dragOffset.x;
-                            let moveY = e.clientY - this.dragOffset.y;
-                        
-                            let lineOffsetX = moveX - this.clickedShape.shape.x1;
-                            let lineOffsetY = moveY - this.clickedShape.shape.y1;
-                        
-                            this.clickedShape.shape.x1 += lineOffsetX;
-                            this.clickedShape.shape.y1 += lineOffsetY;
-                            this.clickedShape.shape.x2 += lineOffsetX;
-                            this.clickedShape.shape.y2 += lineOffsetY;
-                            break;
+        
+                case "line":
+                case "arrow":
+                    let moveX = e.clientX - this.dragOffset.x;
+                    let moveY = e.clientY - this.dragOffset.y;
+                
+                    let lineOffsetX = moveX - this.clickedShape.shape.x1;
+                    let lineOffsetY = moveY - this.clickedShape.shape.y1;
+                
+                    this.clickedShape.shape.x1 += lineOffsetX;
+                    this.clickedShape.shape.y1 += lineOffsetY;
+                    this.clickedShape.shape.x2 += lineOffsetX;
+                    this.clickedShape.shape.y2 += lineOffsetY;
+                    break;
+        
+                case "pencil":
+                    let moveDeltaX = e.clientX - this.dragOffset.x;
+                    let moveDeltaY = e.clientY - this.dragOffset.y;
                     
-                    
-                            case "pencil":
-                            let moveDeltaX = e.clientX - this.dragOffset.x;
-                            let moveDeltaY = e.clientY - this.dragOffset.y;
-                            
-                            this.clickedShape.shape.points = this.clickedShape.shape.points.map(point => ({
-                                    x: point.x + moveDeltaX - this.clickedShape.shape.points[0].x,
-                                    y: point.y + moveDeltaY - this.clickedShape.shape.points[0].y
-                                }));
-                                break;
+                    this.clickedShape.shape.points = this.clickedShape.shape.points.map(point => ({
+                        x: point.x + moveDeltaX - this.clickedShape.shape.points[0].x,
+                        y: point.y + moveDeltaY - this.clickedShape.shape.points[0].y
+                    }));
+                    break;
             }
             this.clearCanvas();
         }
+        
     }
     
 
