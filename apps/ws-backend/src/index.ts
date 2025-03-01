@@ -84,7 +84,6 @@ wss.on("connection",(ws,request)=>{
         }
 
         console.log("message received")
-        console.log(parsedData);
 
         if(parsedData.type === "chat"){
             console.log(parsedData)
@@ -154,6 +153,38 @@ wss.on("connection",(ws,request)=>{
                 }
             })
         }
+            else if(parsedData.type === "update_shape"){
+                console.log(parsedData)
+                let shape = JSON.parse(parsedData.message)
+                console.log("id ", shape?.shape.id , "shape ", shape.shape.shape)
+                console.log("stringfy ", JSON.stringify(shape.shape))
+                try{
+                    await prismaClient.chat.update({
+                        data:{
+                           message:JSON.stringify(shape.shape) 
+                        },
+                        where:{
+                            id:shape?.shape.id,
+                            roomId:Number(parsedData.roomId)
+                        }
+                    })
+                }catch(e){
+                    console.log("Could not delete shape")
+                    console.log(e)
+                }
+
+                users.forEach(user => {
+                    if (user.room.includes(parsedData.roomId) ){
+                        user.ws.send(JSON.stringify({
+                            type:"update_shape",
+                            shape:shape.shape,
+                            roomId:parsedData.roomId,
+                            sentBy:parsedData.sentBy
+                        }))
+                    }
+                })
+                
+            }
     })
 
 
