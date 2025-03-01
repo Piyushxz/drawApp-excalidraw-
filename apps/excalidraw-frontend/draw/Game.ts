@@ -206,36 +206,20 @@ export class Game {
         this.ctx.fillStyle = "rgba(0, 0, 0)"
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.existingShapes.map(({shape,id}) => {
-            console.log("render shape ", shape , " id ",id)
-
+        this.existingShapes.forEach(({ shape, id }) => {
+            console.log("render shape ", shape, " id ", id);
+        
+            this.ctx.strokeStyle = "rgba(255, 255, 255)"; // Default stroke color
+            this.ctx.lineWidth = 1; // Reset line width
+        
             if (shape.type === "rect") {
-                this.ctx.strokeStyle = "rgba(255, 255, 255)"
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "circle") {
                 this.ctx.beginPath();
                 this.ctx.arc(shape.centerX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
                 this.ctx.stroke();
-                this.ctx.closePath();                
-            }
-            else if(shape.type==='pencil')
-            {
-                console.log("rendering pencil",shape);
-
-                for(let i = 0 ; i < shape.points.length-1;i++){
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(shape.points[i].x,shape.points[i].y)
-                    this.ctx.lineTo(shape.points[i+1].x,shape.points[i+1].y)
-                    this.ctx.lineWidth = 2;
-                    this.ctx.stroke();
-
-
-
-                }
-                
-
-            }
-            else if(shape.type === 'diamond'){
+                this.ctx.closePath();
+            } else if (shape.type === "diamond") {
                 this.ctx.beginPath();
                 this.ctx.moveTo(shape.x1, shape.y1);
                 this.ctx.lineTo(shape.x2, shape.y2);
@@ -243,53 +227,54 @@ export class Game {
                 this.ctx.lineTo(shape.x4, shape.y4);
                 this.ctx.closePath();
                 this.ctx.stroke();
-            }
-            else if(shape.type === 'line'){
-                this.ctx.beginPath()
-                this.ctx.moveTo(shape.x1,shape.y1)
-                this.ctx.lineTo(shape.x2,shape.y2)
-                this.ctx.stroke()
-            }
-            else if(shape.type === 'arrow'){
-                console.log("rendering arrow",shape)
-                const headlen = 14; // Length of arrowhead
-                const angle = Math.atan2(shape.y2 - shape.y1, shape.x2 - shape.x1);
-            
+            } else if (shape.type === "line") {
                 this.ctx.beginPath();
-                this.ctx.lineCap = "round";
-                this.ctx.lineWidth = 2.5; // Adjust for better visibility
-            
-                // Draw main line
                 this.ctx.moveTo(shape.x1, shape.y1);
                 this.ctx.lineTo(shape.x2, shape.y2);
-                
-                // Calculate arrowhead points
+                this.ctx.stroke();
+            } else if (shape.type === "arrow") {
+                const headlen = 14;
+                const angle = Math.atan2(shape.y2 - shape.y1, shape.x2 - shape.x1);
+                this.ctx.beginPath();
+                this.ctx.moveTo(shape.x1, shape.y1);
+                this.ctx.lineTo(shape.x2, shape.y2);
                 const arrowX1 = shape.x2 - headlen * Math.cos(angle - Math.PI / 6);
                 const arrowY1 = shape.y2 - headlen * Math.sin(angle - Math.PI / 6);
                 const arrowX2 = shape.x2 - headlen * Math.cos(angle + Math.PI / 6);
                 const arrowY2 = shape.y2 - headlen * Math.sin(angle + Math.PI / 6);
-                
-                // Draw arrowhead
                 this.ctx.moveTo(shape.x2, shape.y2);
                 this.ctx.lineTo(arrowX1, arrowY1);
-                
                 this.ctx.moveTo(shape.x2, shape.y2);
                 this.ctx.lineTo(arrowX2, arrowY2);
-            
                 this.ctx.stroke();
             }
+            else if (shape.type === "pencil") {
+                console.log("rendering pencil", shape);
+            
+                for (let i = 0; i < shape.points.length - 1; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(shape.points[i].x, shape.points[i].y);
+                    this.ctx.lineTo(shape.points[i + 1].x, shape.points[i + 1].y);
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                }
+            }
+            
+            
+        
             if (this.clickedShape && this.clickedShape.shape === shape) {
-                this.ctx.strokeStyle = "#0096FF"; // Selection color
-                this.ctx.lineWidth = 2;
-    
-                // **Find the bounding box of the shape**
+                this.ctx.strokeStyle = "#0096FF"; 
+                this.ctx.lineWidth = 1;
+        
                 let minX, minY, maxX, maxY;
-    
                 if (shape.type === "rect") {
-                    minX = shape.x;
-                    minY = shape.y;
-                    maxX = shape.x + shape.width;
-                    maxY = shape.y + shape.height;
+                    let paddingX = 5; 
+                    let paddingY = 2; 
+                
+                    minX = shape.x - paddingX;
+                    minY = shape.y - paddingY;
+                    maxX = shape.x + shape.width + paddingX;
+                    maxY = shape.y + shape.height + paddingY;
                 } else if (shape.type === "circle") {
                     minX = shape.centerX - shape.radius;
                     minY = shape.centerY - shape.radius;
@@ -306,17 +291,20 @@ export class Game {
                     maxX = Math.max(shape.x1, shape.x2);
                     maxY = Math.max(shape.y1, shape.y2);
                 }
+        
                 let boxSize = Math.max(maxX - minX, maxY - minY);
                 let centerX = (minX + maxX) / 2;
                 let centerY = (minY + maxY) / 2;
-    
                 let squareX = centerX - boxSize / 2;
                 let squareY = centerY - boxSize / 2;
-    
-                // **Draw the square selection box**
+                this.ctx.setLineDash([5, 5]); // Creates a dashed effect
+                this.ctx.globalAlpha = 0.6; // Reduces opacity
                 this.ctx.strokeRect(squareX - 5, squareY - 5, boxSize + 10, boxSize + 10);
+                this.ctx.setLineDash([]); // Reset line dash to solid for other drawings
+                this.ctx.globalAlpha = 1; // Reset opacity to normal
             }
-        })
+        });
+        
         
     }
 
