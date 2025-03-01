@@ -84,11 +84,10 @@ export class Game {
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
-    private clickedShapeIndex:any
+    private clickedShapeIndex:number = -1;
     private clickedShape:shapeArrayType | undefined
     private prevShape:shapeArrayType | undefined
 
-    private shapeChanged:boolean = false
 
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
@@ -120,6 +119,7 @@ export class Game {
         this.selectedTool = tool;
     }
     isPointInsideShape(x: number, y: number, shape: Shape): boolean {
+
         if (shape.type === "rect") {
             return x >= shape.x && x <= shape.x + shape.width &&
                    y >= shape.y && y <= shape.y + shape.height;
@@ -151,21 +151,23 @@ export class Game {
 
     async init() {
         this.existingShapes = await getExisitingShapes(this.roomId);
-        console.log("shape",this.existingShapes);
+        console.log("shapes",this.existingShapes);
 
         this.clearCanvas();
     }
 
-      async deleteShape(){
-        console.log("delete called for",this.clickedShapeIndex)
+       deleteShape(){
+    
+        if (this.clickedShapeIndex === undefined) {
+            console.error("Error: clickedShapeIndex is undefined.");
+            return;
+        }
         this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
     
-        this.clearCanvas();       
-
         this.socket.send(JSON.stringify(
             {
                 type:"delete_shape",
-                shape:this.clickedShape,
+                shape:this.clickedShapeIndex,
                 roomId:this.roomId,
                 sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
             }
@@ -233,7 +235,6 @@ export class Game {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.existingShapes.forEach(({ shape, id }) => {
-            console.log("render shape ", shape, " id ", id);
         
             this.ctx.strokeStyle = "rgba(255, 255, 255)"; // Default stroke color
             this.ctx.lineWidth = 1; // Reset line width
@@ -338,7 +339,6 @@ export class Game {
         this.clicked = true;
         this.startX = e.clientX;
         this.startY = e.clientY;
-        this.clickedShape = undefined;
         this.isDragging = false;
     
         if (this.selectedTool === "mouse") {
@@ -420,7 +420,6 @@ export class Game {
                   roomId: this.roomId,
                   sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
                }))
-               this.shapeChanged = false
         }
 
 
@@ -599,16 +598,24 @@ export class Game {
 
             }
             else if(selectedTool === 'eraser'){
-                let indexVal : shapeArrayType | undefined ;
+                let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
+                    this.isPointInsideShape(e.clientX, e.clientY, shape)
+                );
+  
+                    
+                    if (shapeVal) {
+      
 
-                    indexVal = this.existingShapes.find(({shape}) => 
-                        this.isPointInsideShape(e.clientX, e.clientY, shape)
-                    );
-            
-                    if (indexVal) {
-                        this.clickedShapeIndex = indexVal.id
-                        console.log("index",this.clickedShapeIndex)
+                        console.log(shapeVal.id , "del")
+                        this.clickedShapeIndex = shapeVal.id
+                        console.log(this.clickedShapeIndex, 'pleasw')
                         this.deleteShape();
+
+                    }
+
+
+                    else{
+                        console.log("no shape to del")
                     }
                 
         
