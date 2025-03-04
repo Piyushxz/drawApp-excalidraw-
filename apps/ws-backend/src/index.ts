@@ -124,7 +124,7 @@ wss.on("connection",(ws,request)=>{
                 console.log(`deleting ${parsedData.id}}`)
                 await prismaClient.chat.delete({
                     where:{
-                        id:parsedData.id,
+                        id:parsedData.shape,
                         roomId:Number(parsedData.roomId)
                     }
                 })
@@ -139,7 +139,7 @@ wss.on("connection",(ws,request)=>{
                 if (user.room.includes(parsedData.roomId) &&  parsedData.sentBy!== token){
                     user.ws.send(JSON.stringify({
                         type:"delete_shape",
-                        id:parsedData.id,
+                        id:parsedData.shape,
                         roomId:parsedData.roomId,
                         sentBy:parsedData.sentBy
                     }))
@@ -147,7 +147,7 @@ wss.on("connection",(ws,request)=>{
                 if(parsedData.sentBy === token){
                     user.ws.send(JSON.stringify({
                         type:"local_delete_shape",
-                        id:parsedData.id,
+                        id:parsedData.shape,
                         sentBy:parsedData.sentBy
                     }))
                 }
@@ -168,6 +168,7 @@ wss.on("connection",(ws,request)=>{
                             roomId:Number(parsedData.roomId)
                         }
                     })
+                    console.log("message updated succesfully")
                 }catch(e){
                     console.log("Could not delete shape")
                     console.log(e)
@@ -183,6 +184,8 @@ wss.on("connection",(ws,request)=>{
                         }))
                     }
                 })
+                
+            
                 
             }
     })
