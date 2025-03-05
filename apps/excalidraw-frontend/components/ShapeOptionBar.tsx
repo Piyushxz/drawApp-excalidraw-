@@ -19,7 +19,7 @@ export default function ShapeOptionBar({
     setSelectedTool: React.Dispatch<React.SetStateAction<Tool>>;
   }) {
     return (
-      <div className="w-screen flex justify-center">
+      <div className="w-screen  flex justify-center">
         <div className="fixed h-14 translate-y-4 bg-[#191919] rounded-lg shadow-lg px-2 border border-gray-600/30 flex items-center gap-2">
         <Mouse selectedTool={selectedTool}
           size="lg"

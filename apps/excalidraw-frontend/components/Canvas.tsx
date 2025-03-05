@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import ShapeOptionBar from "./ShapeOptionBar";
 import { Game } from "@/draw/Game";
 import { Tool } from "./ShapeOptionBar";
+import { PanningOptionBar } from "./PanningOptionBar";
 export default function ClientCanvas({ roomId, socket }: { roomId: string; socket: WebSocket }) {
     const [game,setGame] = useState<Game>()
     const [selectedTool,setSelectedTool] = useState<Tool>("rect")
@@ -33,6 +34,7 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
           
         >   <ShapeOptionBar selectedTool = {selectedTool} setSelectedTool={setSelectedTool}/>
             <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
+            <PanningOptionBar/>
         </div>
     );
 }
