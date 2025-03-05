@@ -8,7 +8,7 @@ interface shapeArrayType{
     id:number,
     shape:Shape
 }
-interface Point {
+export interface Point {
     x:number,
     y:number
 }
@@ -80,7 +80,7 @@ export class Game {
     private startX = 0;
     private startY = 0;
     private pencilPath : Point[] = []
-    private selectedTool: Tool = "circle";
+    public selectedTool: Tool = "circle";
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
@@ -229,7 +229,7 @@ export class Game {
         }
     }
 
-    clearCanvas() {
+     clearCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = "rgba(0, 0, 0)"
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
