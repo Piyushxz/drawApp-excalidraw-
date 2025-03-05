@@ -13,7 +13,7 @@ export default function CallToAction() {
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke-width='2' stroke='%2318181b'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e")`,
                         }}
                         className="absolute inset-0 bg-[rgb(19, 170, 122)] bg-blend-overlay 
-                        [mask-image:radial-gradient(50%_70%_at_50%_45%,black,transparent)] transition duration-700"
+                        [mask-image:radial-gradient(40%_70%_at_50%_45%,black,transparent)] transition duration-700"
                     ></div>
 
                     <div className="relative text-center">
@@ -24,7 +24,7 @@ export default function CallToAction() {
                         </h2>
                         
                       
-                        <p className="text-sm md:text-md max-w-xs mx-auto text-white/70 px-4 mt-5 tracking-tighter font-primary">
+                        <p className="text-sm md:text-md max-w-xs mx-auto text-white/70 px-4 mt-2 tracking-tighter font-primary">
                         Collaborate in real-time, anytime, anywhere.
                         </p>
                     </div>

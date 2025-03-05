@@ -22,7 +22,7 @@ export const Hero = ()=>{
         className="py-4  ">
           <motion.div
 
-           className="py-12 rounded-xl  relative group  ">
+           className="pt-24 rounded-xl   group  ">
               
               <div className="relative">
               <h2 className="text-5xl md:text-6xl max-w-sm mx-auto tracking-tight text-center text-white font-primary font-medium">
