@@ -59,15 +59,15 @@ export const useZoomPan = ({
       game?.clearCanvas();
     };
 
-    // Handle panning when the hand tool is selected
+    // Handle panning (only when SelectedTool is 'hand')
     const handleMouseDown = (e: MouseEvent) => {
-      if (game?.selectedTool !== "hand") return;
+      if (game?.selectedTool !== "hand") return; // Ignore if tool is not 'hand'
       setIsPanning(true);
       setStartPoint({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isPanning) return;
+      if (!isPanning || game?.selectedTool !== "hand") return; // Ignore if not panning or tool is different
       setPanOffset({
         x: e.clientX - startPoint.x,
         y: e.clientY - startPoint.y,
