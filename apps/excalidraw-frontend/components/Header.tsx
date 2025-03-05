@@ -4,7 +4,7 @@ export const Header = ()=>{
     return(
         <header className="py-2 border-b border-white/15 md:border-none">
             <div className="container">
-                <div className="flex justify-between items-center mx-4 md:border md:border-white/15 p-2 rounded-lg max-w-5xl mx-auto">
+                <div className="flex justify-between items-center mx-4 md:border md:border-white/15 p-2 rounded-lg   max-w-5xl mx-auto">
                             <div className="p-1.5 rounded-lg border border-white/15">
                                 <Sparkle className="size-8 text-white"/>
                             </div>
