@@ -22,7 +22,7 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
 
     useEffect(() => {
         if (canvasRef.current) {
-            const g = new Game(canvasRef.current, roomId, socket);
+            const g = new Game(canvasRef.current, roomId, socket,setSelectedTool);
             setGame(g);
 
             return () => {
@@ -43,9 +43,12 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
     });
 
     return (
-        <div className="h-[100vh] w-full overflow-hidden">
+        <div     
+              
+         className="h-[100vh] w-full overflow-hidden">
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
-            <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
+            <canvas            
+             ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
 
         </div>

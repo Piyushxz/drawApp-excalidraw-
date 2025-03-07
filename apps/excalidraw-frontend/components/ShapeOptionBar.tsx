@@ -21,14 +21,15 @@ export default function ShapeOptionBar({
   }) {
     return (
       <div className="w-screen  flex justify-center">
-        <div className="fixed h-14 translate-y-4 bg-[#191919] rounded-lg shadow-lg px-2 border border-gray-600/30 flex items-center gap-2">
+        <div className="fixed py-1 translate-y-4 bg-[#191919] rounded-lg shadow-lg px-2 border border-gray-600/30 flex items-center gap-1.5">
         <HandGrab selectedTool={selectedTool}
           size="lg"
           onClick={()=>setSelectedTool("hand")}/>
         <Mouse selectedTool={selectedTool}
           size="lg"
           onClick={()=>setSelectedTool("mouse")}/>
-          
+                    <div className="h-8 border border-white/15"></div>
+
           <Rectangle
             selectedTool={selectedTool}
             size="lg"
@@ -59,6 +60,7 @@ export default function ShapeOptionBar({
           size="lg"
           onClick={()=>setSelectedTool("arrow")}
           />
+          <div className="h-8 border border-white/15"></div>
           <Eraser selectedTool={selectedTool}
           size="lg"
           onClick={()=>setSelectedTool("eraser")}/>

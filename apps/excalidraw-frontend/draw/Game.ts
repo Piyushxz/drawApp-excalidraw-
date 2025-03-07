@@ -1,5 +1,7 @@
 import { Tool } from "@/components/ShapeOptionBar";
 import { getExisitingShapes } from "./util";
+import { Dispatch, SetStateAction } from 'react'
+
 import axios from "axios";
 import { BACKEND_URL } from "@/config";
 import { isPointInsidePolygon, isPointNearLine, isPointNearPencilPath } from "./deleteFunctionality";
@@ -87,6 +89,7 @@ export class Game {
     private clickedShapeIndex:number = -1;
     private clickedShape:shapeArrayType | undefined
     private prevShape:shapeArrayType | undefined
+    private setSelectedTool : Dispatch<SetStateAction<Tool>>;
 
 
     private isDragging = false;
@@ -94,7 +97,7 @@ export class Game {
 
     socket: WebSocket;
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket,setSelectedTool :Dispatch<SetStateAction<Tool>>) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.existingShapes = [];
@@ -105,6 +108,7 @@ export class Game {
         this.initHandlers();
         this.initMouseHandlers();
         this.clearCanvas()
+        this.setSelectedTool = setSelectedTool
     }
     
     destroy() {
@@ -117,6 +121,9 @@ export class Game {
 
     setTool(tool: Tool) {
         this.selectedTool = tool;
+        if(this.selectedTool !== 'arrow'){
+            this.clickedShape = undefined
+        }
     }
     isPointInsideShape(x: number, y: number, shape: Shape): boolean {
 
@@ -289,7 +296,7 @@ export class Game {
             
             
         
-            if (this.clickedShape && this.clickedShape.shape === shape) {
+            if (this.clickedShape && this.clickedShape.shape === shape ) {
                 this.ctx.strokeStyle = "#0096FF"; 
                 this.ctx.lineWidth = 1;
         
@@ -393,8 +400,8 @@ export class Game {
                         };
                         break;
                 }
-    
                 this.clearCanvas(); 
+
             }
         }
     };
@@ -491,8 +498,6 @@ export class Game {
             return;
         }
 
-        // this.existingShapes.push(shape)
-
           this.socket.send(JSON.stringify({
               type: "chat",
               message: JSON.stringify({
@@ -500,6 +505,9 @@ export class Game {
             }),
             roomId: this.roomId
          }))
+         this.setSelectedTool('mouse')
+
+
     }
     mouseMoveHandler = (e:MouseEvent) => {
         if (this.clicked) {
