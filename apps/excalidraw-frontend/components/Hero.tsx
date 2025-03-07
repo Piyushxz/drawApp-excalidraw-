@@ -1,9 +1,10 @@
 "use client"
-import { PencilIcon, PlayCircle, Video } from "lucide-react"
+import { Circle, Diamond, Eraser, PencilIcon, Pentagon, PlayCircle, Square, Video } from "lucide-react"
 import {motion} from "motion/react"
 import { useRouter } from "next/navigation"
 export const Hero = ()=>{
-
+  const shapes = [PencilIcon, Circle, Square, Pentagon, Eraser, Diamond];
+  const duplicatedShapes = [...shapes, ...shapes];
 
     const router = useRouter()
     const stars = "/stars.png"; 
@@ -46,6 +47,29 @@ export const Hero = ()=>{
                         Watch Demo
                     </motion.button>
                   </div>
+
+                  <section className="py-10 flex justify-center">
+                    <div className="container w-[70vw] md:w-[25vw]">
+                      <div style={{ maskImage: "linear-gradient(to right, transparent, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 80%, transparent)" }}
+                       className="flex  overflow-hidden pr-5 ">
+                      <motion.div 
+                      initial={{translateX:"0"}}
+                      animate={{translateX:'-50%'}}
+                      transition={{
+                        repeat:Infinity,
+                        duration:30,
+                        ease:"linear"
+                      }}
+                      className="flex  gap-8 flex-none">
+                      {duplicatedShapes.map((Shape,index)=>(
+                          <Shape key={index} className="size-8 w-auto text-white" />
+                        ))}
+                      </motion.div>
+                      </div>
+  
+
+                    </div>
+                  </section>
               </div>
 
           </motion.div>

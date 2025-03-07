@@ -51,7 +51,7 @@ export const FAQS = () => {
           <motion.div key={index} className="bg-[#65e6bf]/10 rounded-lg w-[80vw] md:w-[40vw]">
             <div
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="h-12 cursor-pointer flex justify-between items-center rounded-lg px-4"
+              className="h-12 cursor-pointer flex justify-between items-center rounded-lg px-4 py-2"
             >
               <h3 className="text-white tracking-tight">{faq.question}</h3>
               <motion.div
@@ -67,7 +67,7 @@ export const FAQS = () => {
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "80px", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0, transition: { duration: 0.1 } }}
+                  exit={{ height: 0, opacity: 0, transition: { duration: 0.2 } }}
                   transition={{ type: "spring", stiffness: 200, bounce: 0.25, mass: 0.5 }}
                   className="text-white tracking-tight p-4 text-xs md:text-sm"
                 >
