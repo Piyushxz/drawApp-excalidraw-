@@ -52,7 +52,7 @@ export const FAQS = () => {
               className="bg-[#65e6bf]/10 rounded-lg w-[80vw] md:w-[40vw] overflow-hidden"
               initial={{ scaleY: 0.95, opacity: 0.8 }}
               animate={{
-                scaleY: openIndex === index ? 1.08 : 1,
+                scaleY: openIndex === index ? 1.06 : 1,
                 opacity: 1,
               }}
               exit={{ scaleY: 0.95, opacity: 0.8 }}
