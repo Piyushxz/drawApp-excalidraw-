@@ -54,3 +54,4 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
         </div>
     );
 }
+ 
