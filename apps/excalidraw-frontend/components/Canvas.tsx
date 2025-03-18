@@ -31,6 +31,18 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
         }
     }, [canvasRef]);
 
+    useEffect(() => {
+        const resizeCanvas = () => {
+            if (canvasRef.current) {
+                canvasRef.current.width = window.innerWidth;
+                canvasRef.current.height = window.innerHeight;
+            }
+        };
+        resizeCanvas(); // Initial resize
+        window.addEventListener("resize", resizeCanvas);
+        return () => window.removeEventListener("resize", resizeCanvas);
+    }, []);
+
     // Hook to manage zoom and pan functionality
     useZoomPan({
         canvasRef,

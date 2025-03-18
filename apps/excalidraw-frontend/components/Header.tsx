@@ -2,9 +2,9 @@ import { MenuIcon } from "lucide-react";
 
 export const Header = () => {
   return (
-    <header className="py-2 border-b border-white/15 md:border-none bg-black fixed top-0 left-0 w-full z-50">
-      <div className="container mx-auto px-2 ">
-        <div className="flex justify-between items-center bg-black md:border md:border-white/15 p-2 rounded-lg max-w-5xl mx-auto  ">
+    <header className="py-2 border-b border-white/15 md:border-none   fixed top-0 left-0 w-full z-50">
+      <div className="container mx-auto px-2">
+        <div className="flex justify-between items-center  bg-neutral-950/70 backdrop-blur md:border md:border-white/15 p-2 rounded-lg max-w-5xl mx-auto b  ">
           <div className="p-1.5 rounded-lg border border-white/15">
             <svg
               fill="#65e6bf"
