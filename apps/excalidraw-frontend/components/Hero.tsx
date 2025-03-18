@@ -26,7 +26,7 @@ export const Hero = ()=>{
            className="pt-24 rounded-xl   group  ">
               
               <div className="relative">
-              <h2 className="text-5xl md:text-6xl max-w-sm mx-auto tracking-tight text-center text-white font-primary font-medium">
+              <h2 className="text-5xl md:text-6xl max-w-sm mx-auto tracking-tighter text-center text-white font-primary font-medium">
                 slapdash
         </h2>                        <p className="text-center text-lg md:text-xl  max-w-xs mx-auto text-white/70 px-4 mt-5 tracking-tighter font-primary ">A fast, simple, and real-time collaborative drawing tool. Bring ideas to life with ease.</p>
                   <div className="flex gap-4 justify-center mt-8">
