@@ -698,6 +698,13 @@ export class Game {
         }
         
     }
+
+     resizeCanvas = () => {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+            console.log("Canvas data" , this.canvas.width, this.canvas.height)
+
+    };
     
 
     initMouseHandlers() {
@@ -708,4 +715,6 @@ export class Game {
         this.canvas.addEventListener("mousemove", this.mouseMoveHandler)    
 
     }
+
+
 }

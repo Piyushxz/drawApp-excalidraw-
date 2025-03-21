@@ -38,10 +38,15 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
                 canvasRef.current.height = window.innerHeight;
             }
         };
+
+        console.log("Canvas data" , canvasRef.current?.width, canvasRef.current?.height)
         resizeCanvas(); // Initial resize
         window.addEventListener("resize", resizeCanvas);
         return () => window.removeEventListener("resize", resizeCanvas);
     }, []);
+
+
+  
 
     // Hook to manage zoom and pan functionality
     useZoomPan({
@@ -59,8 +64,8 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
               
          className="h-[100vh] w-full overflow-hidden">
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
-            <canvas            
-             ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
+            <canvas className=""         
+             ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
 
         </div>
