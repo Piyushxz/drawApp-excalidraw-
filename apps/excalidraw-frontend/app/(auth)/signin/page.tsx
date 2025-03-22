@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Login() {
     const [username, setUsername] = useState("");
@@ -11,17 +12,23 @@ export default function Login() {
 
     const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
+        const loadId = toast.loading("Logging In")
         const result = await signIn("credentials", {
             redirect: false,
             username,
             password
         });
 
+        console.log(username,password)
+        console.log(result)
+        toast.dismiss(loadId)
+
         if (result?.error) {
-            alert("Invalid credentials");
+            toast.error("Invalid credentials");
         } else {
-            router.push("/dashboard"); // Redirect after login
+            router.push("/dashboard"); 
+            toast.success("Logged In !")
+
         }
     };
 

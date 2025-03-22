@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-
+import {prismaClient} from "@repo/db/client"
 export const authOptions = {
     providers: [
         CredentialsProvider({
@@ -10,11 +10,21 @@ export const authOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                // Replace with your authentication logic
-                if (credentials?.username === "admin" && credentials?.password === "password") {
-                    return { id: "1", name: "Admin User", email: "admin@example.com" };
+                if (!credentials?.username || !credentials?.password) {
+                    throw new Error("Missing username or password");
                 }
-                return null;
+
+                const user = await  prismaClient.user.findFirst({where:{username:credentials?.username,password:credentials?.password }
+                })
+                console.log("user",user)
+                if (user) {
+                    return { id: user.id, username: user.username, email: user.email };
+                }
+
+                else{
+                        throw new Error("Invalid credentials");
+    
+                }
             }
         })
     ],
