@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
     "axios": "^1.7.9",
+    "jsonwebtoken": "^9.0.2",
     "lucide": "^0.477.0",
     "lucide-react": "^0.475.0",
     "motion": "^12.4.10",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@repo/backend-common": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/ui": "workspace:*",
     "@types/node": "^20",

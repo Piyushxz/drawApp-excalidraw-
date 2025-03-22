@@ -1,9 +1,14 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {prismaClient} from "@repo/db/client"
+import {JWT_SECRET} from "@repo/backend-common/config"
+import jwt from "jsonwebtoken"
 export const authOptions = {
+    secret:JWT_SECRET,
+
     providers: [
         CredentialsProvider({
+            
             name: "Credentials",
             credentials: {
                 username: { label: "Username", type: "text" },
@@ -18,7 +23,7 @@ export const authOptions = {
                 })
                 console.log("user",user)
                 if (user) {
-                    return { id: user.id, username: user.username, email: user.email };
+                    return user;
                 }
 
                 else{
@@ -28,8 +33,27 @@ export const authOptions = {
             }
         })
     ],
+    
     pages: {
         signIn: "/signin"
+    },
+    
+    callbacks:{
+        async jwt({ token, user }:any) {
+            if (user) {
+                // Sign JWT with user ID
+                token.id = user.id;
+                token.accessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "1h" });
+            }
+            return token;
+        },
+
+        async session({ session, token }:any) {
+            // Attach user ID to session
+            session.user.id = token.id;
+            session.accessToken = token.accessToken;
+            return session;
+        }
     }
 };
 
