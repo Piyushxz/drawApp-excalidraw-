@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header"
 import { ReactElement } from "react"
 
 export default function Layout({children}:
@@ -8,7 +7,6 @@ export default function Layout({children}:
 ){
     return(
         <div>
-            <Header/>
             {children}
 
         </div>
