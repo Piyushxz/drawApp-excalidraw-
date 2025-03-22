@@ -32,7 +32,7 @@ export const Hero = ()=>{
                   <div className="flex gap-4 justify-center mt-8">
                   <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => router.push('/')}
+                      onClick={() => router.push('/signin')}
                       className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center bg-white text-black text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PencilIcon className="size-4"/>
