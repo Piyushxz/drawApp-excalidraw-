@@ -7,7 +7,7 @@ export default function SignupPage() {
             <div className=" md:w-[80vw] w-[90vw] max-h-auto border border-white/30 rounded-lg mx-2 md:mx-10 my-10 grid grid-cols-12">
                 {/* Left Section */}
                 <div className=" col-span-12 md:col-span-6 flex justify-center items-center p-6">
-                    <div className="flex flex-col justify-center gap-6 w-90">
+                    <div className="flex flex-col justify-center gap-6 w-96">
                         {/* Logo */}
                         <div className="p-2 rounded-lg border border-white/15 flex justify-center items-center w-16 h-16">
                             <svg
@@ -63,8 +63,8 @@ export default function SignupPage() {
                         {/* Signup Button */}
                         <button 
                             type="submit" 
-                            className="w-full mt-4 bg-[#65e6bf] text-sm py-3 rounded-md text-white font-medium tracking-tight 
-                            hover:bg-[#65e6bf]/80 transition-all duration-300 ease-in-out"
+                            className="w-full mt-4  bg-gradient-to-r from-[#65e6bf]/40 to-[#65e6bf] text-sm py-3 rounded-md text-white font-medium tracking-tight 
+                            hover:bg-[#65e6bf]/30 transition-all duration-300 ease-in-out"
                         >
                             Sign up
                         </button>
