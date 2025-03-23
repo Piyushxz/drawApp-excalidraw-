@@ -1,7 +1,49 @@
 'use client'
 import LiquidChrome from "@/components/LiquidChrome";
+import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { FormEvent } from "react";
+import { toast } from "sonner";
 export default function SignupPage() {
+
+    const [username,setUsername] = useState('')
+    const [password,setPassword] = useState('')
+    const [email,setEmal] = useState('')
+    const router = useRouter()
+
+
+
+    const handleFormSubmit = async (e: FormEvent<HTMLFormElement>)=>{
+        e.preventDefault()
+        if(!username || !password || !email){
+            toast.error("Please Enter the credentials")
+        }
+        const loadId = toast.loading("Signing Up...")
+
+        try{
+            const response = await axios.post('http://localhost:3008/signup',{
+                username,
+                email,
+                password
+            })
+
+            toast.success("Signed Up")
+    
+            setEmal('')
+            setPassword('')
+            setUsername('')
+            router.push('/signin')
+        }catch(err){
+            toast.error("Could Not sign up")
+        }
+        finally{
+            toast.dismiss(loadId)
+        }
+
+    }
+
     return (
         <div className="flex justify-center  min-h-screen bg-[#0f0f0f]">
             <div className=" md:w-[80vw] w-[90vw] max-h-auto border border-white/30 rounded-lg mx-2 md:mx-10 my-10 grid grid-cols-12">
@@ -34,10 +76,12 @@ export default function SignupPage() {
                         </div>
                         <div className="my-2 w-90  border border-white/10"></div>
                         {/* Input Fields */}
-                        <div className="flex flex-col gap-4">
+                        <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
                         <div className="flex flex-col gap-1">
                                 <label className="text-white tracking-tighter text-sm">Email</label>
                                 <input
+                                    onChange={(e)=>setEmal(e.target.value)}
+                                    value={email}
                                     type="text"
                                     className="w-full bg-[#191919] py-3 px-3 rounded-md text-white text-sm 
                                     focus:outline-none focus:ring-2 focus:ring-[#65e6bf] transition-all"
@@ -46,6 +90,9 @@ export default function SignupPage() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-white tracking-tighter text-sm">Username</label>
                                 <input
+                                            onChange={(e)=>setUsername(e.target.value)}
+
+                                    value={username}
                                     type="text"
                                     className="w-full bg-[#191919] py-3 px-3 rounded-md text-white text-sm 
                                     focus:outline-none focus:ring-2 focus:ring-[#65e6bf] transition-all"
@@ -55,21 +102,25 @@ export default function SignupPage() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-white tracking-tighter text-sm">Password</label>
                                 <input
+                                    onChange={(e)=>setPassword(e.target.value)}
+
+                                    value={password}
                                     type="password"
                                     className="w-full bg-[#191919] py-3 px-3 rounded-md text-white text-sm 
                                     focus:outline-none focus:ring-2 focus:ring-[#65e6bf] transition-all"
                                 />
                             </div>
-                        </div>
 
-                        {/* Signup Button */}
-                        <button 
+                            <button 
                             type="submit" 
                             className="w-full mt-4  bg-gradient-to-r from-[#65e6bf]/40 to-[#65e6bf] text-sm py-3 rounded-md text-white font-medium tracking-tight 
                             hover:bg-[#65e6bf]/30 transition-all duration-300 ease-in-out"
                         >
                             Sign up
                         </button>
+                        </form>
+
+
                         <div className="flex justify-center">
                         <h1 className=" text-sm text-white/50 tracking-tighter ">Already Have an account ?<Link href="/signin" className="text-white opacity-95  "> Log in </Link></h1>
 

@@ -50,7 +50,6 @@ export default function Login() {
 
     return (
         <div className="relative flex justify-center min-h-screen overflow-hidden bg-[#0f0f0f]">
-            {/* Background Lucide Icons */}
 
  
         <Pencil className="absolute top-10 left-16 text-[#65e6bf] opacity-30 w-20 h-20" />
@@ -89,7 +88,7 @@ export default function Login() {
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        className="w-full bg-[#191919] py-2.5 rounded-md text-white px-3 text-sm"
+                                        className="w-full bg-[#191919] py-2.5  focus:outline-none focus:ring-2 focus:ring-[#65e6bf] rounded-md text-white px-3 text-sm"
                                         autoComplete="off"
                                     />
                                 </div>
@@ -99,7 +98,7 @@ export default function Login() {
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-[#191919] py-2.5 rounded-md text-white px-3 text-sm"
+                                        className="w-full bg-[#191919] py-2.5  focus:outline-none focus:ring-2 focus:ring-[#65e6bf] rounded-md text-white px-3 text-sm"
                                         autoComplete="off"
                                     />
                                 </div>
