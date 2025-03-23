@@ -25,8 +25,10 @@ export default function SignupPage() {
 
                         {/* Heading */}
                         <div className="flex flex-col gap-1">
-
-                            <h2 className="opacity-50 text-md text-white tracking-tight">
+                        <h2 className="text-2xl font-semibold text-white tracking-tight">
+                                Get Started
+                            </h2>
+                            <h2 className="opacity-50 text-sm text-white ">
                                 Welcome to Slapdash – Let's create your account
                             </h2>
                         </div>
@@ -96,7 +98,9 @@ export default function SignupPage() {
                             <h1 className="md:text-4xl text-2xl font-semibold tracking-tighter text-white/80">Create.</h1>
                         </div>
                     </div>
-</div>
+                    
+             
+                </div>
 
             </div>
         </div>
