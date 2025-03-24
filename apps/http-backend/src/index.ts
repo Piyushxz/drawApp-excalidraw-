@@ -22,7 +22,21 @@ app.post("/signup",async (req,res)=>{
         return;
     }
 
+
     try{
+        let user = null
+        user = await prismaClient.user.findFirst({
+            where:{
+                username:data.data.username,
+                email:data.data.email
+            }
+        })
+
+        if(user){
+            res.status(409).json({message:"User Already Exists"})
+            return;
+        }
+        
         await prismaClient.user.create({
             data:{
                 username:data.data.username,
