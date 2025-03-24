@@ -12,8 +12,7 @@ COPY ./apps/http-backend ./apps/http-backend
 COPY ./packages ./packages
 
 
-# Install dependencies for the backend
-WORKDIR /usr/src/app/apps/http-backend
+
 RUN pnpm install --frozen-lockfile
 
 RUN apt-get update && apt-get install -y openssl
@@ -21,7 +20,7 @@ RUN apt-get update && apt-get install -y openssl
 
 # Generate Prisma client
 WORKDIR /usr/src/app/packages/db
-RUN pnpm install --frozen-lockfile && pnpm exec prisma generate
+RUN pnpm exec prisma generate
 
 # Set working directory back to backend
 WORKDIR /usr/src/app/apps/http-backend
