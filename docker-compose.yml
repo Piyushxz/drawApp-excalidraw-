@@ -1,0 +1,25 @@
+services:
+  drawapp-be:
+    build: 
+      context: ./
+      dockerfile: ./docker/Dockerfile.be
+
+    ports:
+      - "3008:3008"
+
+
+  drawapp-ws:
+    build: 
+      context: ./
+      dockerfile: ./docker/Dockerfile.ws
+    
+    ports:
+      - '8080:8080'
+
+  drawapp-fe:
+    build: 
+      context: ./
+      dockerfile: ./docker/Dockerfile.fe
+    
+    ports:
+      - "3000:3000"
