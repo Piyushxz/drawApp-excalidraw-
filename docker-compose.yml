@@ -16,7 +16,7 @@ services:
     ports:
       - '8080:8080'
 
-  drawapp-fe:
+  drawapp-frontend:
     build: 
       context: ./
       dockerfile: ./docker/Dockerfile.fe

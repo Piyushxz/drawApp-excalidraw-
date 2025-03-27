@@ -5,6 +5,8 @@ WORKDIR /usr/src/app
 RUN npm install -g pnpm
 COPY ./packages ./packages
 
+
+
 COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
 COPY ./pnpm-workspace.yaml ./pnpm-workspace.yaml
 
@@ -13,6 +15,9 @@ COPY ./turbo.json ./turbo.json
 COPY ./apps/excalidraw-frontend ./apps/excalidraw-frontend
 RUN pnpm install 
 
+WORKDIR /usr/src/app/packages/db
+
+RUN npx prisma generate 
 
 WORKDIR /usr/src/app/apps/excalidraw-frontend
 
