@@ -9,7 +9,7 @@ services:
 
 
   drawapp-ws:
-    build: 
+    build:   
       context: ./
       dockerfile: ./docker/Dockerfile.ws
     
