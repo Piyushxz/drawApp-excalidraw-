@@ -30,20 +30,16 @@ export const useZoomPan = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Reset transform before applying new scale and translation
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Apply panning (translate) and zoom (scale)
     ctx.translate(panOffset.x, panOffset.y);
     ctx.scale(scale, scale);
 
-    // Handle zooming with mouse wheel
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-
       const delta = e.deltaY < 0 ? 10 : -10;
-      const newZoom = Math.min(Math.max(zoom + delta, 10), 300);
+      const newZoom = Math.min(Math.max(zoom + delta, 50), 200); // Clamped between 50 and 200
 
       const rect = canvas.getBoundingClientRect();
       const mouseX = (e.clientX - rect.left - panOffset.x) / scale;
@@ -59,15 +55,14 @@ export const useZoomPan = ({
       game?.clearCanvas();
     };
 
-    // Handle panning (only when SelectedTool is 'hand')
     const handleMouseDown = (e: MouseEvent) => {
-      if (game?.selectedTool !== "hand") return; // Ignore if tool is not 'hand'
+      if (game?.selectedTool !== "hand") return;
       setIsPanning(true);
       setStartPoint({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isPanning || game?.selectedTool !== "hand") return; // Ignore if not panning or tool is different
+      if (!isPanning || game?.selectedTool !== "hand") return;
       setPanOffset({
         x: e.clientX - startPoint.x,
         y: e.clientY - startPoint.y,
@@ -91,5 +86,4 @@ export const useZoomPan = ({
       game?.clearCanvas();
     };
   }, [scale, panOffset, zoom, setZoom, setPanOffset, canvasRef, game, isPanning, startPoint]);
-
 };
