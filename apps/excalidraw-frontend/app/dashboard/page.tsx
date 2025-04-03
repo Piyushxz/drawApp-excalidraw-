@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../api/auth/[...nextauth]/route"
 import { DashboardNavbar } from "@/components/DashboardNavbar"
 import DashboardMain from "@/components/DashboardMain"
+import DashboardClient from "@/components/DashboardClient"
 export default async function Dashboard(){
 
     const session = await getServerSession(authOptions)
@@ -12,10 +13,7 @@ export default async function Dashboard(){
         return <Redirect to={"/"}/>
     }
     return(
-        <div>
-        <DashboardNavbar/>
-        <DashboardMain/>
-        </div>
+        <DashboardClient/>
 
     )
 }

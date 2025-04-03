@@ -1,7 +1,12 @@
 import { Plus } from "lucide-react";
+import { Dispatch, SetStateAction } from 'react'
 
-export default function DashboardMain(){
+export default function DashboardMain({isModalOpen,setIsModalOpen}:{isModalOpen:boolean,setIsModalOpen:Dispatch<SetStateAction<boolean>>}){
     
+
+    const handleOpenModal=()=>{
+        setIsModalOpen(true)
+    }
     return(
         <div className="pt-[50px]">
 
@@ -10,7 +15,8 @@ export default function DashboardMain(){
 
                 <div className="flex justify-between items-center">
                     <h3 className="font-semibold tracking-tight text-white text-4xl">Rooms,</h3>
-                    <button className="bg-white font-primary text-black flex items-center gap-2 py-2 px-4 rounded-lg hover:opacity-80">
+                    <button onClick={handleOpenModal}
+                     className="bg-white font-primary text-black flex items-center gap-2 py-2 px-4 rounded-lg hover:opacity-80">
                         <Plus className="size-4"/>
                         <h3 className=" tracking-tight text-black  text-sm">Create Room</h3>
                     </button>
