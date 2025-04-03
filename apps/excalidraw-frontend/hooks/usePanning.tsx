@@ -87,3 +87,4 @@ export const useZoomPan = ({
     };
   }, [scale, panOffset, zoom, setZoom, setPanOffset, canvasRef, game, isPanning, startPoint]);
 };
+  

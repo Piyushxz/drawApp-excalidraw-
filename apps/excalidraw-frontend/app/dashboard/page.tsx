@@ -1,6 +1,7 @@
 import { Redirect } from "@/components/Redirect"
 import { getServerSession } from "next-auth"
 import { authOptions } from "../api/auth/[...nextauth]/route"
+import { DashboardNavbar } from "@/components/DashboardNavbar"
 export default async function Dashboard(){
 
     const session = await getServerSession(authOptions)
@@ -10,8 +11,6 @@ export default async function Dashboard(){
         return <Redirect to={"/"}/>
     }
     return(
-        <div className="text-white">
-            dashboard
-        </div>
+        <DashboardNavbar/>
     )
 }
