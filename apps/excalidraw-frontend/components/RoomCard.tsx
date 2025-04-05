@@ -11,7 +11,7 @@ export const RoomCard = ({roomName, createdAt}: {
                 <Trash2Icon className="text-red-600" size={24} />
             </div>
             <div className="flex justify-between items-center p-4">
-                <h3 className="tracking-tight text-white/50 text-sm font-semibold">Created {createdAt}</h3>
+                <h3 className="tracking-tight text-white/50 text-sm ">Created {createdAt}</h3>
                 <button 
                     className="bg-white font-primary text-black flex items-center gap-2 py-2 px-4 rounded-lg hover:opacity-80">
                     <LogIn size={20} />
