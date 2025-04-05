@@ -88,6 +88,32 @@ app.post("/signin",async (req,res)=>{
     }
 })
 
+app.get("/rooms",middleware,async (req,res)=>{
+
+    const userId  = req.userId;
+
+    if (!userId) {
+        res.status(400).json({ message: "User not authenticated" });
+        return
+     }
+
+     try{
+
+        const rooms = await prismaClient.room.findMany({
+            where:{
+                adminId:userId
+            }
+        })
+
+
+        res.status(200).json({rooms})
+     }
+     catch(e){
+        res.status(500).json({message:"Server error"})
+     }
+
+})
+
 app.post("/createroom",middleware,async (req,res)=>{
     const userId = req.userId;
 
