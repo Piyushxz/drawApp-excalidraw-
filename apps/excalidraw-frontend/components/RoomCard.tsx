@@ -7,7 +7,7 @@ export const RoomCard = ({roomName, createdAt,id }: {
 
     
 }) => {
-    console.log(createdAt)
+    const dateRef = new Date(createdAt)
     return (
 
         <div className="w-96 h-40 border border-white/15 rounded-lg shadow-lg flex flex-col justify-between ">
@@ -16,7 +16,7 @@ export const RoomCard = ({roomName, createdAt,id }: {
                 <Trash2Icon className="text-red-600" size={24} />
             </div>
             <div className="flex justify-between items-center p-4">
-                <h3 className="tracking-tight text-white/50 text-sm ">Created {createdAt}</h3>
+                <h3 className="tracking-tight text-white/50 text-sm ">Created {`${dateRef.getDate()}-${dateRef.getMonth()}-${dateRef.getFullYear()}`}</h3>
                 <button 
                     className="bg-white font-primary text-black flex items-center gap-2 py-2 px-4 rounded-lg hover:opacity-80">
                     <LogIn size={20} />
