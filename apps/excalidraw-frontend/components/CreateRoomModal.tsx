@@ -1,5 +1,5 @@
 import axios from "axios";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { getSession } from "next-auth/react";
 import { Dispatch, SetStateAction, useRef } from "react";
 import { toast } from "sonner";

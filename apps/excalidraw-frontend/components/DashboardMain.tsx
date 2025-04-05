@@ -2,7 +2,7 @@ import { Delete, LogIn, Plus, Trash, Trash2Icon } from "lucide-react";
 import { Dispatch, SetStateAction } from 'react'
 import { RoomCard } from "./RoomCard";
 
-export default function DashboardMain({isModalOpen,setIsModalOpen}:{isModalOpen:boolean,setIsModalOpen:Dispatch<SetStateAction<boolean>>}){
+export default function DashboardMain({isModalOpen,setIsModalOpen,roomData}:{isModalOpen:boolean,setIsModalOpen:Dispatch<SetStateAction<boolean>>,roomData:never[]}){
     
 
     const handleOpenModal=()=>{
@@ -25,7 +25,11 @@ export default function DashboardMain({isModalOpen,setIsModalOpen}:{isModalOpen:
 
                 <div className="flex flex-wrap py-10 gap-4">
            
-                    <RoomCard roomName="hey" createdAt="04/03/2025"/>
+                    {
+                        roomData.map(({id,slug,createdAt})=>
+                        <RoomCard roomName={slug} createdAt={createdAt} key={id} id={id} />
+                        )
+                    }
                     
                 </div>
 

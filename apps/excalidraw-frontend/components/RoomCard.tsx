@@ -1,10 +1,15 @@
 import { LogIn, Trash2Icon } from "lucide-react";
 
-export const RoomCard = ({roomName, createdAt}: {
+export const RoomCard = ({roomName, createdAt,id }: {
     roomName: string,
-    createdAt: string
+    createdAt: string,
+    id:string
+
+    
 }) => {
+    console.log(createdAt)
     return (
+
         <div className="w-96 h-40 border border-white/15 rounded-lg shadow-lg flex flex-col justify-between ">
             <div className="flex justify-between items-center p-4">
                 <h3 className="tracking-tighter text-white text-xl font-semibold">{roomName}</h3>
