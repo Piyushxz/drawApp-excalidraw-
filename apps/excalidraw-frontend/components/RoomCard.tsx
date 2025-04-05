@@ -1,4 +1,8 @@
+"use client"
+import axios from "axios";
 import { LogIn, Trash2Icon } from "lucide-react";
+import { getSession } from "next-auth/react";
+import { toast } from "sonner";
 
 export const RoomCard = ({roomName, createdAt,id }: {
     roomName: string,
@@ -8,12 +12,35 @@ export const RoomCard = ({roomName, createdAt,id }: {
     
 }) => {
     const dateRef = new Date(createdAt)
+    const handleDeleteRoom = async ()=>{
+
+        const loadId = toast.loading(`Deleting ${roomName}`)
+        try{
+            const session = await getSession()
+            const response = await axios.delete('http://localhost:3008/rooms',{
+                data:{id}
+                ,
+                    headers:{
+                        token:session?.accessToken
+                    }
+                
+                
+            })
+
+            toast.success("Room Deleted Succesfully")
+        }
+        catch(e){
+            toast.error("Server error")
+        }finally{
+            toast.dismiss(loadId)
+        }
+    }
     return (
 
         <div className="w-96 h-40 border border-white/15 rounded-lg shadow-lg flex flex-col justify-between ">
             <div className="flex justify-between items-center p-4">
                 <h3 className="tracking-tighter text-white text-xl font-semibold">{roomName}</h3>
-                <Trash2Icon className="text-red-600" size={24} />
+                <Trash2Icon onClick={handleDeleteRoom} className="text-red-600 hover:text-red-600/70 cursor-pointer" size={24} />
             </div>
             <div className="flex justify-between items-center p-4">
                 <h3 className="tracking-tight text-white/50 text-sm ">Created {`${dateRef.getDate()}-${dateRef.getMonth()}-${dateRef.getFullYear()}`}</h3>
