@@ -113,6 +113,36 @@ app.get("/rooms",middleware,async (req,res)=>{
      }
 
 })
+app.delete("/rooms",middleware,async (req,res)=>{
+
+    const userId  = req.userId;
+    const roomId = req.body.id
+
+    if (!userId) {
+        res.status(400).json({ message: "User not authenticated" });
+        return
+     }
+
+     try{
+
+        const room = await prismaClient.room.delete({
+            where:{
+                adminId:userId,
+                id:roomId
+            }
+        })
+
+
+        res.status(200).json({room:room,message:"Room deleted succesfully"})
+     }
+     catch(e){
+        res.status(500).json({message:"Server error"})
+     }
+
+})
+
+
+
 
 app.post("/createroom",middleware,async (req,res)=>{
     const userId = req.userId;
