@@ -43,7 +43,7 @@ export const authOptions = {
             if (user) {
                 // Sign JWT with user ID
                 token.id = user.id;
-                token.accessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "1h" });
+                token.accessToken = jwt.sign({ id: user.id }, JWT_SECRET);
             }
             return token;
         },
