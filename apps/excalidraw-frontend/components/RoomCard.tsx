@@ -2,6 +2,7 @@
 import axios from "axios";
 import { LogIn, Trash2Icon } from "lucide-react";
 import { getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export const RoomCard = ({roomName, createdAt,id }: {
@@ -12,6 +13,7 @@ export const RoomCard = ({roomName, createdAt,id }: {
     
 }) => {
     const dateRef = new Date(createdAt)
+    const router = useRouter()
     const handleDeleteRoom = async ()=>{
 
         const loadId = toast.loading(`Deleting ${roomName}`)
@@ -44,7 +46,9 @@ export const RoomCard = ({roomName, createdAt,id }: {
             </div>
             <div className="flex justify-between items-center p-4">
                 <h3 className="tracking-tight text-white/50 text-sm ">Created {`${dateRef.getDate()}-${dateRef.getMonth()}-${dateRef.getFullYear()}`}</h3>
-                <button 
+                <button
+                    onClick={()=>router.push(`canvas/${id}`)} 
+
                     className="bg-white font-primary text-black flex items-center gap-2 py-2 px-4 rounded-lg hover:opacity-80">
                     <LogIn size={20} />
                     <h3 className="tracking-tight text-black text-sm">Join Room</h3>
