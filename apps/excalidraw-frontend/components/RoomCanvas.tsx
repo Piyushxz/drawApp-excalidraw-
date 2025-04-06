@@ -1,13 +1,25 @@
 "use client"
-import { useEffect, useState} from "react"
+import { useEffect, useRef, useState} from "react"
 import { WS_URL } from "@/config"
+import { Session } from "next-auth"
 import ClientCanvas from "./Canvas"
+import { getSession } from "next-auth/react"
 export default function RoomCanvas({roomId}:{roomId:string}){
 
     const [socket,setSocket] = useState<WebSocket | null>(null)
+    const sessionRef = useRef<Session | null>(null)
     useEffect(()=>{
 
-        const ws = new WebSocket(`${WS_URL}/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0`)
+        let session = null
+        async function  Session(){
+             session = await getSession()
+             if(session){
+                sessionRef.current = session.accessToken
+             }
+        }
+
+        Session()
+        const ws = new WebSocket(`${WS_URL}/?token=${session?.accessToken}`)
         ws.onopen =()=>{
             setSocket(ws)
             console.log("conncted ws")
@@ -25,12 +37,13 @@ export default function RoomCanvas({roomId}:{roomId:string}){
 
     }
     ,[])
-    if (!socket) {
+    if (!socket ) {
         return <div className="text-white">Joining...</div>;
     }
 
+ 
     return <div>
-             <ClientCanvas roomId={roomId} socket={socket} />;
+             <ClientCanvas roomId={roomId} socket={socket} session={  sessionRef.current} />;
 
     </div>
 

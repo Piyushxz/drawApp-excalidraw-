@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction } from 'react'
 import axios from "axios";
 import { BACKEND_URL } from "@/config";
 import { isPointInsidePolygon, isPointNearLine, isPointNearPencilPath } from "./deleteFunctionality";
+import { Session } from "next-auth";
 
 interface shapeArrayType{
     id:number,
@@ -90,14 +91,14 @@ export class Game {
     private clickedShape:shapeArrayType | undefined
     private prevShape:shapeArrayType | undefined
     private setSelectedTool : Dispatch<SetStateAction<Tool>>;
-
+    private session:Session
 
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
 
     socket: WebSocket;
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket,setSelectedTool :Dispatch<SetStateAction<Tool>>) {
+    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket,setSelectedTool :Dispatch<SetStateAction<Tool>>,session:Session) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.existingShapes = [];
@@ -109,6 +110,7 @@ export class Game {
         this.initMouseHandlers();
         this.clearCanvas()
         this.setSelectedTool = setSelectedTool
+        this.session = session
     }
     
     destroy() {

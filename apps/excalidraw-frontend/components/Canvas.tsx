@@ -6,7 +6,8 @@ import { Tool } from "./ShapeOptionBar";
 import { PanningOptionBar } from "./PanningOptionBar";
 import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
-export default function ClientCanvas({ roomId, socket }: { roomId: string; socket: WebSocket }) {
+import { Session } from "next-auth";
+export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session | null}) {
     const [game, setGame] = useState<Game>();
     const [selectedTool, setSelectedTool] = useState<Tool>("rect");
 
@@ -21,8 +22,8 @@ export default function ClientCanvas({ roomId, socket }: { roomId: string; socke
     }, [selectedTool]);
 
     useEffect(() => {
-        if (canvasRef.current) {
-            const g = new Game(canvasRef.current, roomId, socket,setSelectedTool);
+        if (canvasRef.current && session) {
+            const g = new Game(canvasRef.current, roomId, socket,setSelectedTool,session);
             setGame(g);
 
             return () => {
