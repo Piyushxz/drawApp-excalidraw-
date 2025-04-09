@@ -44,9 +44,7 @@ export default function RoomCanvas({roomId}:{roomId:string}){
 
      initWebSocket()
 
-     return()=>{
-        ws.close()
-       }
+ 
 
     }
     ,[roomId])
