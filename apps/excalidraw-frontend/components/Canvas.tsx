@@ -8,6 +8,9 @@ import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session | null}) {
+
+
+
     const [game, setGame] = useState<Game>();
     const [selectedTool, setSelectedTool] = useState<Tool>("rect");
 
@@ -19,10 +22,11 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
 
     useEffect(() => {
         game?.setTool(selectedTool);
+        
     }, [selectedTool]);
 
     useEffect(() => {
-        if (canvasRef.current && session) {
+        if (canvasRef.current ) {
             const g = new Game(canvasRef.current, roomId, socket,setSelectedTool,session);
             setGame(g);
 
