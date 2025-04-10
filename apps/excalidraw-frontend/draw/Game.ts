@@ -178,7 +178,7 @@ export class Game {
                 type:"delete_shape",
                 shape:this.clickedShapeIndex,
                 roomId:this.roomId,
-                sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
+                sentBy : this.session.accessToken
             }
         )
 
@@ -214,7 +214,7 @@ export class Game {
                 const token = message.sentBy
                 console.log("update shape msg rcvd ", message)
 
-                if(token === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0')
+                if(token === this.session.accessToken)
                 {
                     console.log("You sent it !!!")
                     return;
@@ -427,7 +427,7 @@ export class Game {
                        shape:this.clickedShape
                   }),
                   roomId: this.roomId,
-                  sentBy : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlkZWRiMzE5LThlYWItNDFmMC04ZTNiLTljYTgzNzA3Njk5NSIsImlhdCI6MTczNjkyMDk1N30.8vT_oN-YGmcaQ8bM-Klg7W5O5vM7MFjp94wzQe-tVO0"
+                  sentBy : this.session.accessToken
                }))
         }
 

@@ -7,7 +7,7 @@ import { PanningOptionBar } from "./PanningOptionBar";
 import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
-export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session | null}) {
+export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
 
 
 
