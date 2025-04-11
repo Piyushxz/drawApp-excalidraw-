@@ -185,7 +185,7 @@ export class Game {
         )
 
 
-    }
+     }
     initHandlers() {
         this.socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
