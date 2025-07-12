@@ -110,8 +110,7 @@ export class Game {
         this.initMouseHandlers();
         this.clearCanvas()
         this.setSelectedTool = setSelectedTool
-        this.session = session
-    }
+        this.session = session || { accessToken: null } as Session;    }
     
     destroy() {
         this.canvas.removeEventListener("mousedown", this.mouseDownHandler)
@@ -161,18 +160,20 @@ export class Game {
     async init() {
         this.existingShapes = await getExisitingShapes(this.roomId);
         console.log("shapes",this.existingShapes);
-
+        console.log('init called')
         this.clearCanvas();
     }
 
        deleteShape(){
     
+        console.log(this.session,'434')
         if (this.clickedShapeIndex === undefined) {
             console.error("Error: clickedShapeIndex is undefined.");
             return;
         }
         this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
     
+
         this.socket.send(JSON.stringify(
             {
                 type:"delete_shape",
@@ -608,10 +609,15 @@ export class Game {
 
             }
             else if(selectedTool === 'eraser'){
-                let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
+                if (!this.session?.accessToken) {
+                    console.error("No active session");
+                    return;
+                }
+                            let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
                     this.isPointInsideShape(e.clientX, e.clientY, shape)
                 );
   
+                console.log(this.session)
                     
                     if (shapeVal) {
       
@@ -632,14 +638,6 @@ export class Game {
             }
             
         }
-
-
-
-
-
-
-
-
 
 
 

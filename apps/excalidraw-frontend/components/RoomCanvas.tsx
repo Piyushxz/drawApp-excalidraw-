@@ -16,9 +16,9 @@ export default function RoomCanvas({roomId}:{roomId:string}){
         let session = null
         async function  initWebSocket(){
              session = await getSession()
+             console.log("session",session)
              if(session){
-                setSession( session?.accessToken)
-                console.log("sessionref",session)
+                setSession( session)
              }
               ws = new WebSocket(`${WS_URL}/?token=${session?.accessToken}`)
              console.log(`${WS_URL}/?token=${session?.accessToken}`)
@@ -39,12 +39,8 @@ export default function RoomCanvas({roomId}:{roomId:string}){
 
  
         }
-
-
-
      initWebSocket()
 
- 
 
     }
     ,[roomId])
@@ -54,7 +50,7 @@ export default function RoomCanvas({roomId}:{roomId:string}){
 
  
     return <div>
-             <ClientCanvas roomId={roomId} socket={socket} session={ session?.accessToken} />;
+             <ClientCanvas roomId={roomId} socket={socket} session={ session} />;
 
     </div>
 
