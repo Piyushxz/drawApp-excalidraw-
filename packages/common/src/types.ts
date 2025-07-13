@@ -1,4 +1,6 @@
 import {z} from  "zod"
+import {v4 as uuid} from "uuid"
+
 
 
 export const signUpSchema = z.object({
@@ -20,3 +22,5 @@ export const signin = z.object({
 export const createRoomSchema = z.object({
     roomName:z.string().min(3)
 })
+
+export {uuid}

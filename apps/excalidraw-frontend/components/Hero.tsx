@@ -1,13 +1,29 @@
 "use client"
+import axios from "axios"
 import { Circle, Diamond, Eraser, PencilIcon, Pentagon, PlayCircle, Square, Video } from "lucide-react"
 import {motion} from "motion/react"
 import { useRouter } from "next/navigation"
+import {uuid} from "@repo/common/types"
 export const Hero = ()=>{
   const shapes = [PencilIcon, Circle, Square, Pentagon, Eraser, Diamond];
   const duplicatedShapes = [...shapes, ...shapes];
 
     const router = useRouter()
     const stars = "/stars.png"; 
+
+    const handleCreateRandomRoom = async () => {
+
+      try{
+        const response = await axios.post('http://localhost:3008/create-random-room', {
+          adminId: uuid()
+        })
+        const roomId = response.data.id;
+        router.push(`/canvas/${roomId}`);
+      }catch(e){
+        console.error("Error creating room:", e);
+      }
+
+    }
     return(
         <motion.div           animate={{
             backgroundPositionX:"100%"
@@ -32,7 +48,7 @@ export const Hero = ()=>{
                   <div className="flex gap-4 justify-center mt-8">
                   <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => router.push('/signin')}
+                      onClick={handleCreateRandomRoom}
                       className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center bg-white text-black text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PencilIcon className="size-4"/>
@@ -40,11 +56,11 @@ export const Hero = ()=>{
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => router.push('/')}
+                      onClick={() => router.push('/signin')}
                       className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center bg-black text-white border border-white/15 text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PlayCircle className="size-4"/>
-                        Watch Demo
+                        Login
                     </motion.button>
                   </div>
 

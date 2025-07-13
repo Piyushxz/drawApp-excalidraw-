@@ -7,8 +7,6 @@ import jwt from "jsonwebtoken"
 import cors from "cors"
 const app = express()
 
-
-
 app.use(express.json())
 app.use(cors())
 
@@ -174,11 +172,12 @@ app.post("/createroom",middleware,async (req,res)=>{
 
 app.post('/create-random-room',async(req,res)=>{
     try{
+        const adminId = req.body.adminId
         const roomName = `room-${Math.random().toString(36).substring(2, 15)}`;
         const room = await prismaClient.room.create({
             data:{
                 slug:roomName,
-                adminId:"random" 
+                adminId 
             }
         })
         res.status(200).json({message:`${roomName} created!`,id:room.id})

@@ -15,6 +15,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [selectedTool, setSelectedTool] = useState<Tool>("rect");
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
