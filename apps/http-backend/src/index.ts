@@ -172,6 +172,21 @@ app.post("/createroom",middleware,async (req,res)=>{
     }
 })
 
+app.post('/create-random-room',async(req,res)=>{
+    try{
+        const roomName = `room-${Math.random().toString(36).substring(2, 15)}`;
+        const room = await prismaClient.room.create({
+            data:{
+                slug:roomName,
+                adminId:"random" 
+            }
+        })
+        res.status(200).json({message:`${roomName} created!`,id:room.id})
+    }catch(e){
+        res.status(500).json({message:"Could not create room"})
+    }
+})
+
 app.get("/chats/:roomId",async (req,res)=>{
 
     const roomId = Number(req.params.roomId);
