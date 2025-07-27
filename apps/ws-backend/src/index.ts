@@ -136,6 +136,7 @@ wss.on("connection",(ws,request)=>{
             console.log(parsedData.sentBy,"<- token")
 
             users.forEach(user => {
+                // &&  parsedData.sentBy!== token
                 if (user.room.includes(parsedData.roomId) &&  parsedData.sentBy!== token){
                     user.ws.send(JSON.stringify({
                         type:"delete_shape",
@@ -144,13 +145,13 @@ wss.on("connection",(ws,request)=>{
                         sentBy:parsedData.sentBy
                     }))
                 }
-                if(parsedData.sentBy === token){
-                    user.ws.send(JSON.stringify({
-                        type:"local_delete_shape",
-                        id:parsedData.shape,
-                        sentBy:parsedData.sentBy
-                    }))
-                }
+                // if(parsedData.sentBy === token){
+                //     user.ws.send(JSON.stringify({
+                //         type:"local_delete_shape",
+                //         id:parsedData.shape,
+                //         sentBy:parsedData.sentBy
+                //     }))
+                // }
             })
         }
             else if(parsedData.type === "update_shape"){
@@ -174,7 +175,7 @@ wss.on("connection",(ws,request)=>{
                     console.log(e)
                 }
 
-                users.forEach(user => {
+                users.forEach(user => { 
                     if (user.room.includes(parsedData.roomId) ){
                         user.ws.send(JSON.stringify({
                             type:"update_shape",
