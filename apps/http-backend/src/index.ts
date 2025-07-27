@@ -174,14 +174,16 @@ app.post('/create-random-room',async(req,res)=>{
     try{
         const adminId = req.body.adminId
         const roomName = `room-${Math.random().toString(36).substring(2, 15)}`;
+        const user = `user-${Math.random().toString(36).substring(2, 15)}`;
         const room = await prismaClient.room.create({
             data:{
                 slug:roomName,
-                adminId 
+                adminId : "f9b0ce35-644f-4b8b-b92c-f675b442ce0d"
             }
         })
         res.status(200).json({message:`${roomName} created!`,id:room.id})
     }catch(e){
+        console.log(e)
         res.status(500).json({message:"Could not create room"})
     }
 })
