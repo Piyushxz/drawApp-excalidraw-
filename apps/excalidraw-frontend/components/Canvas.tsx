@@ -37,6 +37,14 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         }
     }, [canvasRef]);
 
+    // Update game with zoom and pan state
+    useEffect(() => {
+        if (game) {
+            game.updateTransform(zoom, panOffset);
+            game.clearCanvas();
+        }
+    }, [zoom, panOffset, game]);
+
     useEffect(() => {
         const resizeCanvas = () => {
             if (canvasRef.current) {

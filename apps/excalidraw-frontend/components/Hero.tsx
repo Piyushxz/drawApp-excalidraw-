@@ -25,7 +25,7 @@ export const Hero = ()=>{
 
     }
     return(
-        <motion.div           animate={{
+        <motion.div    animate={{
             backgroundPositionX:"100%"
           }}
           transition={{

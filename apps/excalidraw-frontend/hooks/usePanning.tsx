@@ -27,19 +27,13 @@ export const useZoomPan = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.translate(panOffset.x, panOffset.y);
-    ctx.scale(scale, scale);
+    // Don't apply transformations here since Game class handles them
+    // Just clear the canvas and let the game handle rendering
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       const delta = e.deltaY < 0 ? 10 : -10;
-      const newZoom = Math.min(Math.max(zoom + delta, 50), 200); // Clamped between 50 and 200
+      const newZoom = Math.min(Math.max(zoom + delta, 30), 200); // Clamped between 50 and 200
 
       const rect = canvas.getBoundingClientRect();
       const mouseX = (e.clientX - rect.left - panOffset.x) / scale;
@@ -52,7 +46,6 @@ export const useZoomPan = ({
 
       setPanOffset(newPanOffset);
       setZoom(newZoom);
-      game?.clearCanvas();
     };
 
     const handleMouseDown = (e: MouseEvent) => {
@@ -76,14 +69,11 @@ export const useZoomPan = ({
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
 
-    game?.clearCanvas();
-
     return () => {
       canvas.removeEventListener("wheel", handleWheel);
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
-      game?.clearCanvas();
     };
   }, [scale, panOffset, zoom, setZoom, setPanOffset, canvasRef, game, isPanning, startPoint]);
 };

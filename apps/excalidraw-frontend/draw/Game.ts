@@ -82,6 +82,8 @@ export class Game {
     private clicked: boolean;
     private startX = 0;
     private startY = 0;
+    private currentMouseX = 0;
+    private currentMouseY = 0;
     private pencilPath : Point[] = []
     public selectedTool: Tool = "circle";
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
@@ -95,6 +97,10 @@ export class Game {
 
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
+
+    // Zoom and pan state
+    private zoom: number = 100;
+    private panOffset: Point = { x: 0, y: 0 };
 
     socket: WebSocket;
 
@@ -111,6 +117,111 @@ export class Game {
         this.clearCanvas()
         this.setSelectedTool = setSelectedTool
         this.session = session
+    }
+
+    // Method to update zoom and pan state
+    updateTransform(zoom: number, panOffset: Point) {
+        this.zoom = zoom;
+        this.panOffset = panOffset;
+    }
+
+    // Transform screen coordinates to canvas coordinates
+    private screenToCanvas(screenX: number, screenY: number): Point {
+        const scale = this.zoom / 100;
+        return {
+            x: (screenX - this.panOffset.x) / scale,
+            y: (screenY - this.panOffset.y) / scale
+        };
+    }
+
+    // Transform canvas coordinates to screen coordinates
+    private canvasToScreen(canvasX: number, canvasY: number): Point {
+        const scale = this.zoom / 100;
+        return {
+            x: canvasX * scale + this.panOffset.x,
+            y: canvasY * scale + this.panOffset.y
+        };
+    }
+
+    // Method to draw preview shapes with transformations
+    private drawPreview() {
+        // Apply transformations for preview drawing
+        this.ctx.save();
+        this.ctx.translate(this.panOffset.x, this.panOffset.y);
+        this.ctx.scale(this.zoom / 100, this.zoom / 100);
+        
+        this.ctx.strokeStyle = "rgba(255, 255, 255)";
+        this.ctx.lineWidth = 1;
+        
+        const selectedTool = this.selectedTool;
+        const width = this.currentMouseX - this.startX;
+        const height = this.currentMouseY - this.startY;
+        
+        if (selectedTool === "rect") {
+            this.ctx.strokeRect(this.startX, this.startY, width, height);   
+        } else if (selectedTool === "circle") {
+            const radius = Math.max(width, height) / 2;
+            const centerX = this.startX + radius;
+            const centerY = this.startY + radius;
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, Math.abs(radius), 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.closePath();                
+        } else if(selectedTool === 'pencil'){
+            this.ctx.beginPath();
+            for (let i = 0; i < this.pencilPath.length - 1; i++) {
+                this.ctx.moveTo(this.pencilPath[i].x, this.pencilPath[i].y);
+                this.ctx.lineTo(this.pencilPath[i + 1].x, this.pencilPath[i + 1].y);
+            }
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+            this.ctx.closePath();
+        } else if(selectedTool === 'diamond'){
+            const centerX = this.startX + width / 2;
+            const centerY = this.startY + height / 2;
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(centerX, this.startY); // Top point
+            this.ctx.lineTo(this.startX, centerY); // Left point
+            this.ctx.lineTo(centerX, this.startY + height); // Bottom point
+            this.ctx.lineTo(this.startX + width, centerY); // Right point
+            this.ctx.closePath();
+            this.ctx.stroke();
+        } else if(selectedTool === 'line'){
+            this.ctx.beginPath()
+            this.ctx.moveTo(this.startX,this.startY)
+            this.ctx.lineTo(this.currentMouseX,this.currentMouseY)
+            this.ctx.stroke();
+        } else if(selectedTool === 'arrow'){
+            const headlen = 14; // Length of arrowhead
+            const angle = Math.atan2(this.currentMouseY - this.startY, this.currentMouseX - this.startX);
+        
+            this.ctx.beginPath();
+            this.ctx.lineCap = "round";
+            this.ctx.lineWidth = 2.5; // Adjust for better visibility
+        
+            // Draw main line
+            this.ctx.moveTo(this.startX, this.startY);
+            this.ctx.lineTo(this.currentMouseX, this.currentMouseY);
+            
+            // Calculate arrowhead points
+            const arrowX1 = this.currentMouseX - headlen * Math.cos(angle - Math.PI / 6);
+            const arrowY1 = this.currentMouseY - headlen * Math.sin(angle - Math.PI / 6);
+            const arrowX2 = this.currentMouseX - headlen * Math.cos(angle + Math.PI / 6);
+            const arrowY2 = this.currentMouseY - headlen * Math.sin(angle + Math.PI / 6);
+            
+            // Draw arrowhead
+            this.ctx.moveTo(this.currentMouseX, this.currentMouseY);
+            this.ctx.lineTo(arrowX1, arrowY1);
+            
+            this.ctx.moveTo(this.currentMouseX, this.currentMouseY);
+            this.ctx.lineTo(arrowX2, arrowY2);
+        
+            this.ctx.stroke();
+        }
+        
+        // Restore transformations
+        this.ctx.restore();
     }
     
     destroy() {
@@ -206,19 +317,20 @@ export class Game {
                 this.clickedShapeIndex = id
                 this.deleteShape()
             }
-            else if(message.type === 'local_delete_shape' ){
-                this.clickedShapeIndex = JSON.parse(message.id)
-                this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
-                this.clearCanvas()
-            }else if(message.type === 'update_shape'){
+            // else if(message.type === 'local_delete_shape' ){
+            //     this.clickedShapeIndex = JSON.parse(message.id)
+            //     this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
+            //     this.clearCanvas()
+            // }
+            else if(message.type === 'update_shape'){
                 const token = message.sentBy
                 console.log("update shape msg rcvd ", message)
 
-                if(token === this.session.accessToken)
-                {
-                    console.log("You sent it !!!")
-                    return;
-                }
+                // if(token === this.session.accessToken)
+                // {
+                //     console.log("You sent it !!!")
+                //     return;
+                // }
 
 
                 let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.shape.id);
@@ -242,6 +354,11 @@ export class Game {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = "rgba(0, 0, 0)"
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Apply transformations
+        this.ctx.save();
+        this.ctx.translate(this.panOffset.x, this.panOffset.y);
+        this.ctx.scale(this.zoom / 100, this.zoom / 100);
 
         this.existingShapes.forEach(({ shape, id }) => {
         
@@ -341,18 +458,20 @@ export class Game {
             }
         });
         
-        
+        // Restore transformations
+        this.ctx.restore();
     }
 
     mouseDownHandler = (e: MouseEvent) => {
         this.clicked = true;
-        this.startX = e.clientX;
-        this.startY = e.clientY;
+        const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
+        this.startX = transformedCoords.x;
+        this.startY = transformedCoords.y;
         this.isDragging = false;
     
         if (this.selectedTool === "mouse") {
             let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
-                this.isPointInsideShape(e.clientX, e.clientY, shape)
+                this.isPointInsideShape(transformedCoords.x, transformedCoords.y, shape)
             );
     
             console.log("shape from mouse", shapeVal);
@@ -362,43 +481,43 @@ export class Game {
                 this.prevShape = JSON.parse(JSON.stringify(shapeVal));
                 this.isDragging = true;
     
-                switch (shapeVal.shape.type) {
+                                switch (shapeVal.shape.type) {
                     case "rect":
                         this.dragOffset = {
-                            x: e.clientX - shapeVal.shape.x,
-                            y: e.clientY - shapeVal.shape.y
+                            x: transformedCoords.x - shapeVal.shape.x,
+                            y: transformedCoords.y - shapeVal.shape.y
                         };
                         break;
-    
+
                     case "diamond":
                         let centerX = (shapeVal.shape.x1 + shapeVal.shape.x3) / 2;
                         let centerY = (shapeVal.shape.y1 + shapeVal.shape.y3) / 2;
-    
+
                         this.dragOffset = {
-                            x: e.clientX - centerX,
-                            y: e.clientY - centerY
+                            x: transformedCoords.x - centerX,
+                            y: transformedCoords.y - centerY
                         };
                         break;
-    
+
                     case "circle":
                         this.dragOffset = {
-                            x: e.clientX - shapeVal.shape.centerX,
-                            y: e.clientY - shapeVal.shape.centerY
+                            x: transformedCoords.x - shapeVal.shape.centerX,
+                            y: transformedCoords.y - shapeVal.shape.centerY
                         };
                         break;
-    
+
                     case "line":
                     case "arrow":
                         this.dragOffset = {
-                            x: e.clientX - shapeVal.shape.x1,
-                            y: e.clientY - shapeVal.shape.y1
+                            x: transformedCoords.x - shapeVal.shape.x1,
+                            y: transformedCoords.y - shapeVal.shape.y1
                         };
                         break;
-    
+
                     case "pencil":
                         this.dragOffset = {
-                            x: e.clientX - shapeVal.shape.points[0].x,
-                            y: e.clientY - shapeVal.shape.points[0].y
+                            x: transformedCoords.x - shapeVal.shape.points[0].x,
+                            y: transformedCoords.y - shapeVal.shape.points[0].y
                         };
                         break;
                 }
@@ -410,8 +529,9 @@ export class Game {
     
     mouseUpHandler = (e:MouseEvent) => {
         this.clicked = false
-        const width = e.clientX - this.startX;
-        const height = e.clientY - this.startY;
+        const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
+        const width = transformedCoords.x - this.startX;
+        const height = transformedCoords.y - this.startY;
         this.isDragging = false
         const selectedTool = this.selectedTool;
         let shape: Shape | null = null;
@@ -513,103 +633,46 @@ export class Game {
     }
     mouseMoveHandler = (e:MouseEvent) => {
         if (this.clicked) {
-            const width = e.clientX - this.startX;
-            const height = e.clientY - this.startY;
+            const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
+            this.currentMouseX = transformedCoords.x;
+            this.currentMouseY = transformedCoords.y;
+            
+            const width = transformedCoords.x - this.startX;
+            const height = transformedCoords.y - this.startY;
 
             this.clearCanvas();
-            this.ctx.strokeStyle = "rgba(255, 255, 255)"
-            const selectedTool = this.selectedTool;
-            console.log(selectedTool)
-            if (selectedTool === "rect") {
-                this.ctx.strokeRect(this.startX, this.startY, width, height);   
-            } else if (selectedTool === "circle") {
-                const radius = Math.max(width, height) / 2;
-                const centerX = this.startX + radius;
-                const centerY = this.startY + radius;
-                this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, Math.abs(radius), 0, Math.PI * 2);
-                this.ctx.stroke();
-                this.ctx.closePath();                
-            }
-            else if(selectedTool === 'pencil'){
-                const currentX = e.clientX;
-                const currentY = e.clientY;
-            
+            this.drawPreview();
+            // Handle pencil path updates
+            if(this.selectedTool === 'pencil'){
+                const currentX = transformedCoords.x;
+                const currentY = transformedCoords.y;
                 this.pencilPath.push({ x: currentX, y: currentY });
+            }
             
-                this.ctx.beginPath();
-                for (let i = 0; i < this.pencilPath.length - 1; i++) {
-                    this.ctx.moveTo(this.pencilPath[i].x, this.pencilPath[i].y);
-                    this.ctx.lineTo(this.pencilPath[i + 1].x, this.pencilPath[i + 1].y);
-                }
-                this.ctx.lineWidth = 2;
-                this.ctx.stroke();
-                this.ctx.closePath();
-
-            }else if(selectedTool === 'diamond'){
+            // Handle diamond coordinates
+            if(this.selectedTool === 'diamond'){
                 const centerX = this.startX + width / 2;
                 const centerY = this.startY + height / 2;
-    
-                this.ctx.beginPath();
-                this.ctx.moveTo(centerX, this.startY); // Top point
-                this.ctx.lineTo(this.startX, centerY); // Left point
-                this.ctx.lineTo(centerX, this.startY + height); // Bottom point
-                this.ctx.lineTo(this.startX + width, centerY); // Right point
-                this.ctx.closePath();
-                this.ctx.stroke();
                 this.diamondCoords.P1 = {x:centerX,y:this.startY}
                 this.diamondCoords.P2 = {x:this.startX,y:centerY}
                 this.diamondCoords.P3 = {x:centerX,y:this.startY+height}
                 this.diamondCoords.P4 = {x:this.startX+width,y:centerY}
-                console.log("diamond coors",this.diamondCoords)
-
-                
-
             }
-            else if(selectedTool === 'line'){
-                this.ctx.beginPath()
-                this.ctx.moveTo(this.startX,this.startY)
-                this.ctx.lineTo(e.clientX,e.clientY)
-                this.ctx.stroke();
-
+            
+            // Handle line coordinates
+            if(this.selectedTool === 'line'){
                 this.lineCoords.P1= {x:this.startX,y:this.startY}
-                this.lineCoords.P2= {x:e.clientX,y:e.clientY}
-
+                this.lineCoords.P2= {x:transformedCoords.x,y:transformedCoords.y}
             }
-            else if(selectedTool === 'arrow'){
-                const headlen = 14; // Length of arrowhead
-                const angle = Math.atan2(e.clientY - this.startY, e.clientX - this.startX);
             
-                this.ctx.beginPath();
-                this.ctx.lineCap = "round";
-                this.ctx.lineWidth = 2.5; // Adjust for better visibility
-            
-                // Draw main line
-                this.ctx.moveTo(this.startX, this.startY);
-                this.ctx.lineTo(e.clientX, e.clientY);
+            // Handle arrow coordinates
+            if(this.selectedTool === 'arrow'){
                 this.arrowCoords.P1= {x:this.startX,y:this.startY}
-                this.arrowCoords.P2= {x:e.clientX,y:e.clientY}
-                console.log("arrow",this.arrowCoords)
-                
-                // Calculate arrowhead points
-                const arrowX1 = e.clientX - headlen * Math.cos(angle - Math.PI / 6);
-                const arrowY1 = e.clientY - headlen * Math.sin(angle - Math.PI / 6);
-                const arrowX2 = e.clientX - headlen * Math.cos(angle + Math.PI / 6);
-                const arrowY2 = e.clientY - headlen * Math.sin(angle + Math.PI / 6);
-                
-                // Draw arrowhead
-                this.ctx.moveTo(e.clientX, e.clientY);
-                this.ctx.lineTo(arrowX1, arrowY1);
-                
-                this.ctx.moveTo(e.clientX, e.clientY);
-                this.ctx.lineTo(arrowX2, arrowY2);
-            
-                this.ctx.stroke();
-
+                this.arrowCoords.P2= {x:transformedCoords.x,y:transformedCoords.y}
             }
-            else if(selectedTool === 'eraser'){
+            else if(this.selectedTool === 'eraser'){
                 let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
-                    this.isPointInsideShape(e.clientX, e.clientY, shape)
+                    this.isPointInsideShape(transformedCoords.x, transformedCoords.y, shape)
                 );
   
                     
@@ -644,15 +707,16 @@ export class Game {
 
 
         if (this.isDragging && this.clickedShape && this.clicked && this.selectedTool === 'mouse') {
+            const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
             switch (this.clickedShape.shape.type) {
                 case "rect":
-                    this.clickedShape.shape.x = e.clientX - this.dragOffset.x;
-                    this.clickedShape.shape.y = e.clientY - this.dragOffset.y;
+                    this.clickedShape.shape.x = transformedCoords.x - this.dragOffset.x;
+                    this.clickedShape.shape.y = transformedCoords.y - this.dragOffset.y;
                     break;
         
                 case "diamond":
-                    let dxDiamond = e.clientX - this.dragOffset.x;
-                    let dyDiamond = e.clientY - this.dragOffset.y;
+                    let dxDiamond = transformedCoords.x - this.dragOffset.x;
+                    let dyDiamond = transformedCoords.y - this.dragOffset.y;
                 
                     let offsetX = dxDiamond - this.clickedShape.shape.x1;
                     let offsetY = dyDiamond - this.clickedShape.shape.y1;
@@ -668,14 +732,14 @@ export class Game {
                     break;
         
                 case "circle":
-                    this.clickedShape.shape.centerX = e.clientX - this.dragOffset.x;
-                    this.clickedShape.shape.centerY = e.clientY - this.dragOffset.y;
+                    this.clickedShape.shape.centerX = transformedCoords.x - this.dragOffset.x;
+                    this.clickedShape.shape.centerY = transformedCoords.y - this.dragOffset.y;
                     break;
         
                 case "line":
                 case "arrow":
-                    let moveX = e.clientX - this.dragOffset.x;
-                    let moveY = e.clientY - this.dragOffset.y;
+                    let moveX = transformedCoords.x - this.dragOffset.x;
+                    let moveY = transformedCoords.y - this.dragOffset.y;
                 
                     let lineOffsetX = moveX - this.clickedShape.shape.x1;
                     let lineOffsetY = moveY - this.clickedShape.shape.y1;
@@ -687,8 +751,8 @@ export class Game {
                     break;
         
                 case "pencil":
-                    let moveDeltaX = e.clientX - this.dragOffset.x;
-                    let moveDeltaY = e.clientY - this.dragOffset.y;
+                    let moveDeltaX = transformedCoords.x - this.dragOffset.x;
+                    let moveDeltaY = transformedCoords.y - this.dragOffset.y;
                     
                     this.clickedShape.shape.points = this.clickedShape.shape.points.map(point => ({
                         x: point.x + moveDeltaX - this.clickedShape.shape.points[0].x,
@@ -696,7 +760,6 @@ export class Game {
                     }));
                     break;
             }
-            this.clearCanvas();
         }
         
     }
