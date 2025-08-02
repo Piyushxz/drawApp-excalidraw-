@@ -7,14 +7,16 @@ import { PanningOptionBar } from "./PanningOptionBar";
 import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
+import { ShapeConfigModal } from "./ShapeConfigModal";
+
+
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
-
-
 
     const [game, setGame] = useState<Game>();
     const [selectedTool, setSelectedTool] = useState<Tool>("rect");
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [showShapeConfigModal,setShowShapeConfigModal] = useState(false)
     
 
     // Zoom and pan state
@@ -60,8 +62,16 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     }, []);
 
 
+        console.log(game?.clickedShapeIndex,9999)
+    useEffect(()=>{
+        if(game?.clickedShapeIndex !== undefined && game?.clickedShapeIndex !== -1){
+            setShowShapeConfigModal(true)
+        }
+        else{
+            setShowShapeConfigModal(false)
+        }
+    },[game?.clickedShapeIndex])
   
-
     // Hook to manage zoom and pan functionality
     useZoomPan({
         canvasRef,
@@ -81,6 +91,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             <canvas className=""         
              ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
+            <ShapeConfigModal game={game} clickedShapeIndex={game?.clickedShapeIndex} shape={game?.clickedShape} showShapeConfigModal={showShapeConfigModal} setShowShapeConfigModal={setShowShapeConfigModal} />
 
         </div>
     );

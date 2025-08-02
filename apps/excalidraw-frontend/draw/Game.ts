@@ -7,7 +7,7 @@ import { BACKEND_URL } from "@/config";
 import { isPointInsidePolygon, isPointNearLine, isPointNearPencilPath } from "./deleteFunctionality";
 import { Session } from "next-auth";
 
-interface shapeArrayType{
+export interface shapeArrayType{
     id:number,
     shape:Shape
 }
@@ -89,8 +89,8 @@ export class Game {
     private diamondCoords: Diamond = {P1:{x:0,y:0},P2:{x:0,y:0},P3:{x:0,y:0},P4:{x:0,y:0}};
     private lineCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
     private arrowCoords : Line = {P1:{x:0,y:0},P2:{x:0,y:0}}
-    private clickedShapeIndex:number = -1;
-    private clickedShape:shapeArrayType | undefined
+    public clickedShapeIndex:number = -1;
+    public clickedShape:shapeArrayType | undefined
     private prevShape:shapeArrayType | undefined
     private setSelectedTool : Dispatch<SetStateAction<Tool>>;
     private session:Session
@@ -235,8 +235,16 @@ export class Game {
     setTool(tool: Tool) {
         this.selectedTool = tool;
         if(this.selectedTool !== 'arrow'){
-            this.clickedShape = undefined
+            this.clickedShape = undefined;
+            this.clickedShapeIndex = -1;
         }
+    }
+
+    // Method to clear shape selection
+    clearSelection() {
+        this.clickedShape = undefined;
+        this.clickedShapeIndex = -1;
+        this.clearCanvas();
     }
     isPointInsideShape(x: number, y: number, shape: Shape): boolean {
 
@@ -417,7 +425,7 @@ export class Game {
         
             if (this.clickedShape && this.clickedShape.shape === shape ) {
                 this.ctx.strokeStyle = "#0096FF"; 
-                this.ctx.lineWidth = 1;
+                this.ctx.lineWidth = 2;
         
                 let minX, minY, maxX, maxY;
                 if (shape.type === "rect") {
@@ -451,10 +459,10 @@ export class Game {
                 let squareX = centerX - boxSize / 2;
                 let squareY = centerY - boxSize / 2;
                 this.ctx.setLineDash([5, 5]); // Creates a dashed effect
-                this.ctx.globalAlpha = 0.6; // Reduces opacity
+                // this.ctx.globalAlpha = 0.6; // Reduces opacity
                 this.ctx.strokeRect(squareX - 5, squareY - 5, boxSize + 10, boxSize + 10);
                 this.ctx.setLineDash([]); // Reset line dash to solid for other drawings
-                this.ctx.globalAlpha = 1; // Reset opacity to normal
+                // this.ctx.globalAlpha = 1; // Reset opacity to normal
             }
         });
         
@@ -468,6 +476,11 @@ export class Game {
         this.startX = transformedCoords.x;
         this.startY = transformedCoords.y;
         this.isDragging = false;
+
+        // Clear selection if not using mouse tool
+        if (this.selectedTool !== "mouse") {
+            this.clearSelection();
+        }
     
         if (this.selectedTool === "mouse") {
             let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
@@ -478,10 +491,11 @@ export class Game {
     
             if (shapeVal) {
                 this.clickedShape = shapeVal;
+                this.clickedShapeIndex = shapeVal.id;
                 this.prevShape = JSON.parse(JSON.stringify(shapeVal));
                 this.isDragging = true;
     
-                                switch (shapeVal.shape.type) {
+                switch (shapeVal.shape.type) {
                     case "rect":
                         this.dragOffset = {
                             x: transformedCoords.x - shapeVal.shape.x,
@@ -523,6 +537,10 @@ export class Game {
                 }
                 this.clearCanvas(); 
 
+            }
+            else{
+                this.clickedShape = undefined;
+                this.clickedShapeIndex = -1;
             }
         }
     };
