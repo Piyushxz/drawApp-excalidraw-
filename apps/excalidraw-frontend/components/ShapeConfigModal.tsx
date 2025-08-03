@@ -29,6 +29,7 @@ export const ShapeConfigModal = (props: ShapeConfigModalProps) => {
     };
 
     const handleColorComplete = (color: any) => {
+        props.game?.updateShapeColor(props.game?.clickedShapeIndex,color.hex)
         setSelectedColor(color.hex);
         setShowColorPicker(false);
         // Apply the color change to the shape
@@ -63,17 +64,24 @@ export const ShapeConfigModal = (props: ShapeConfigModalProps) => {
                     animate={{ x: 0 }}
                     exit={{ x: -300 }}
                     transition={{ duration: 0.2, ease: [0.19, 1, 0.22, 1] }}
-                    className="absolute left-4 font-satoshi tracking-tight top-36 -translate-y-1/2 w-64 h-auto bg-[#191919] border border-gray-300/10 rounded-lg shadow-lg z-[100] p-4"
+                    className="absolute left-4 font-satoshi  top-36 -translate-y-1/2 w-64 h-auto bg-[#191919] border border-gray-300/10 rounded-lg shadow-lg z-[100] p-4"
                 >
                     <div className="flex flex-col gap-3 justify-between mb-3">
-                        <p className="text-white text-sm"><strong>Type:</strong> {props.shape?.shape.type}</p>
+                        <p className="text-white text-sm capitalize font-bold">{props.shape?.shape.type}</p>
+
+
+                        <div className="flex flex-col gap-1">
+                        <p className="text-white text-sm text-white">Stroke</p>
                         <div className="flex gap-2 items-center">
                             {predefinedColors.map((color, index) => (
                                 <div
                                     key={index}
-                                    className="w-6 h-6 rounded-md cursor-pointer hover:scale-110 transition-transform"
+                                    className="w-6 h-6 rounded-md cursor-pointer  "
                                     style={{ backgroundColor: color }}
-                                    onClick={() => handlePredefinedColorClick(color)}
+                                    onClick={() =>{
+                                        props.game?.updateShapeColor(props.game?.clickedShapeIndex,color)
+                                        handlePredefinedColorClick(color)
+                                    }}
                                 ></div>
                             ))}
                             <div className="w-[1px] h-6 bg-gray-500 rounded-md"></div>
@@ -83,10 +91,34 @@ export const ShapeConfigModal = (props: ShapeConfigModalProps) => {
                                 onClick={() => setShowColorPicker(!showColorPicker)}
                             ></div>
                             {showColorPicker &&  (
-                                <div className="absolute top-20 left-[140px] z-50">
+                                <div className="absolute top-28 left-[142px] z-50">
                                     <BlockPicker color={selectedColor} onChangeComplete={handleColorComplete} />
                                 </div>
                             )}
+
+
+                        </div>
+                        </div>
+
+
+                        <div className="flex flex-col gap-1">
+                        <p className="text-white text-sm text-white">Stroke Width</p>
+                        <div className="flex items-center gap-2">
+                        <div onClick={()=>props.game?.updateShapeStrokeWidth(props.game?.clickedShapeIndex,2)} className={`w-10 h-10 rounded-md bg-white flex items-center px-2 ${props.game?.clickedShape?.strokeWidth === 2 ? "border-2 border-black" : ""}`}>
+                                <div className="w-full h-[1px] bg-black/50 rounded-full"></div>
+                            </div>
+                            <div onClick={()=>props.game?.updateShapeStrokeWidth(props.game?.clickedShapeIndex,4)} className={`w-10 h-10 rounded-md bg-white flex items-center px-2 ${props.game?.clickedShape?.strokeWidth === 3 ? "border-2 border-black" : ""}`}>
+                                <div className="w-full h-[3px] bg-black/50 rounded-full"></div> 
+                            </div>
+                            <div onClick={()=>props.game?.updateShapeStrokeWidth(props.game?.clickedShapeIndex,6)} className={`w-10 h-10 rounded-md bg-white flex items-center px-2 ${props.game?.clickedShape?.strokeWidth === 4 ? "border-2 border-black" : ""}`}>
+                                <div className="w-full h-[5px] bg-black/50 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        </div>
+                        
+                        <div>
+
                         </div>
                         
 

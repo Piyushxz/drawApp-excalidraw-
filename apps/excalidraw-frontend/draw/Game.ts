@@ -9,7 +9,9 @@ import { Session } from "next-auth";
 
 export interface shapeArrayType{
     id:number,
-    shape:Shape
+    shape:Shape,
+    color?:string,
+    strokeWidth?:number
 }
 export interface Point {
     x:number,
@@ -144,6 +146,24 @@ export class Game {
         };
     }
 
+    public updateShapeColor(id:number,color:string){
+        let shape = this.existingShapes.find(shapeItem => shapeItem.id === id) ;
+        if(shape){
+            shape.color = color;
+            console.log("shape",shape)
+        }
+        this.clearCanvas();
+    }
+
+    public updateShapeStrokeWidth(id:number,strokeWidth:number){
+        let shape = this.existingShapes.find(shapeItem => shapeItem.id === id) ;
+        if(shape){
+            shape.strokeWidth = strokeWidth;
+            console.log("shape",shape)
+        }
+        this.clearCanvas();
+    }
+
     // Method to draw preview shapes with transformations
     private drawPreview() {
         // Apply transformations for preview drawing
@@ -275,9 +295,6 @@ export class Game {
         return false;
     }
     
- 
-    
-
     async init() {
         this.existingShapes = await getExisitingShapes(this.roomId);
         console.log("shapes",this.existingShapes);
@@ -369,11 +386,11 @@ export class Game {
         this.ctx.translate(this.panOffset.x, this.panOffset.y);
         this.ctx.scale(this.zoom / 100, this.zoom / 100);
 
-        this.existingShapes.forEach(({ shape, id }) => {
-        
-            this.ctx.strokeStyle = "rgba(255, 255, 255)"; // Default stroke color
-            this.ctx.lineWidth = 1; // Reset line width
-        
+        this.existingShapes.forEach(({ shape, id ,color,strokeWidth}) => {
+    
+            this.ctx.strokeStyle = color ? color : "#ffffff"; // Default stroke color
+            this.ctx.lineWidth = strokeWidth ? strokeWidth : 2; // Reset line width
+            
             if (shape.type === "rect") {
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "circle") {
@@ -417,7 +434,7 @@ export class Game {
                     this.ctx.beginPath();
                     this.ctx.moveTo(shape.points[i].x, shape.points[i].y);
                     this.ctx.lineTo(shape.points[i + 1].x, shape.points[i + 1].y);
-                    this.ctx.lineWidth = 2;
+                    this.ctx.lineWidth = strokeWidth ? strokeWidth : 2;
                     this.ctx.stroke();
                 }
             }

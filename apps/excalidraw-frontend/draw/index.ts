@@ -16,8 +16,6 @@ type Shape = {
 
 }
    
-
-
 export async function initDraw(canvas:HTMLCanvasElement,roomId:string,socket:WebSocket){
     
 
