@@ -165,8 +165,8 @@ wss.on("connection",(ws,request)=>{
                            message:JSON.stringify(shape.shape) 
                         },
                         where:{
-                            id:shape?.shape.id,
-                            roomId:Number(parsedData.roomId)
+                            id:shape?.shape?.id,
+                            roomId:Number(parsedData?.roomId)
                         }
                     })
                     console.log("message updated succesfully")
@@ -188,6 +188,64 @@ wss.on("connection",(ws,request)=>{
                 
             
                 
+            }
+            else if(parsedData.type === "update_shape_color"){
+                console.log("update_shape_color .,99", parsedData)
+                
+                // Handle the new format where shape is sent directly
+                if (parsedData.shape) {
+                    let updatedShape = {
+                        ...parsedData?.shape,
+                        color: parsedData?.color
+                    }
+                    console.log("updatedShape ", updatedShape)
+                    
+                    // Broadcast to other users
+                    users.forEach(user => { 
+                        if (user.room.includes(parsedData.roomId) && parsedData.sentBy !== user.userId){
+                            user.ws.send(JSON.stringify({
+                                type: "update_shape_color",
+                                id: parsedData.id,
+                                shape: updatedShape,
+                                color: parsedData.color,
+                                roomId: parsedData.roomId,
+                                sentBy: parsedData.sentBy
+                            }))
+                        }
+                    })
+                    try{
+                        await prismaClient.chat.update({
+                            data:{
+                                message:JSON.stringify(updatedShape)
+                            },
+                            where:{
+                                id:parsedData.id,
+                                roomId:Number(parsedData.roomId)
+                            }
+                        })
+                        console.log("shape updated succesfully")
+                    }
+                    catch(err){
+                        console.log("Could not update shape")
+                        console.log(err)
+                    }
+                }
+            }
+            else if(parsedData.type === "update_shape_stroke_width"){
+                console.log("update_shape_stroke_width", parsedData)
+                
+                // Broadcast to other users
+                users.forEach(user => { 
+                    if (user.room.includes(parsedData.roomId) && parsedData.sentBy !== user.userId){
+                        user.ws.send(JSON.stringify({
+                            type: "update_shape_stroke_width",
+                            id: parsedData.id,
+                            strokeWidth: parsedData.strokeWidth,
+                            roomId: parsedData.roomId,
+                            sentBy: parsedData.sentBy
+                        }))
+                    }
+                })
             }
     })
 
