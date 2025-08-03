@@ -543,6 +543,7 @@ export class Game {
             else{
                 this.clickedShape = undefined;
                 this.clickedShapeIndex = -1;
+                this.clearCanvas();
             }
         }
     };
