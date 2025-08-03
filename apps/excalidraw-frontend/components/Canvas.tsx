@@ -8,6 +8,7 @@ import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
 import { ShapeConfigModal } from "./ShapeConfigModal";
+import ThemeToggle from "./ThemeToggle";
 
 
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
@@ -18,6 +19,9 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [showShapeConfigModal, setShowShapeConfigModal] = useState(false);
     const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
+
+    // Theme state
+    const [isDark, setIsDark] = useState(true); // Default to dark mode
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
@@ -62,7 +66,6 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     }, []);
 
 
-    console.log(game?.clickedShape,9999)
 
     // Poll for shape selection changes since Game class doesn't trigger React re-renders
     useEffect(() => {
@@ -98,13 +101,20 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         game:game
     });
 
+    // Handle theme toggle
+    const handleThemeToggle = (newIsDark: boolean) => {
+        setIsDark(newIsDark);
+        // Update game theme if game exists
+        if (game) {
+            game.setTheme(newIsDark);
+        }
+    };
+
     return (
-        <div     
-              
-         className="h-[100vh] w-full overflow-hidden">
+        <div className={`h-[100vh] w-full overflow-hidden ${isDark ? 'dark' : ''}`}>
+            <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} />
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
-            <canvas className=""         
-             ref={canvasRef}></canvas>
+            <canvas className="" ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
             <ShapeConfigModal 
                 game={game} 
@@ -113,7 +123,6 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                 showShapeConfigModal={showShapeConfigModal}
                 setShowShapeConfigModal={setShowShapeConfigModal}
             />
-
         </div>
     );
 }

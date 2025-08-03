@@ -96,7 +96,7 @@ export class Game {
     private prevShape:shapeArrayType | undefined
     private setSelectedTool : Dispatch<SetStateAction<Tool>>;
     private session:Session
-
+    private isDarkTheme: boolean = true; // Default to dark theme
 
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
@@ -126,6 +126,12 @@ export class Game {
     updateTransform(zoom: number, panOffset: Point) {
         this.zoom = zoom;
         this.panOffset = panOffset;
+    }
+
+    // Method to set theme
+    public setTheme(isDark: boolean) {
+        this.isDarkTheme = isDark;
+        this.clearCanvas();
     }
 
     // Transform screen coordinates to canvas coordinates
@@ -214,7 +220,7 @@ export class Game {
         this.ctx.translate(this.panOffset.x, this.panOffset.y);
         this.ctx.scale(this.zoom / 100, this.zoom / 100);
         
-        this.ctx.strokeStyle = "rgba(255, 255, 255)";
+        this.ctx.strokeStyle = this.isDarkTheme ? "rgba(255, 255, 255)" : "rgba(0, 0, 0)";
         this.ctx.lineWidth = 1;
         
         const selectedTool = this.selectedTool;
@@ -435,7 +441,7 @@ export class Game {
 
      clearCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = "rgba(0, 0, 0)"
+        this.ctx.fillStyle = this.isDarkTheme ? "rgba(0, 0, 0, 1)" : "rgba(255, 255, 255, 1)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Apply transformations
@@ -445,7 +451,7 @@ export class Game {
 
         this.existingShapes.forEach(({ shape, id ,color,strokeWidth}) => {
     
-            this.ctx.strokeStyle = color ? color : "#ffffff"; // Default stroke color
+            this.ctx.strokeStyle = color ? color : (this.isDarkTheme ? "#ffffff" : "#000000"); // Theme-appropriate default color
             this.ctx.lineWidth = strokeWidth ? strokeWidth : 2; // Reset line width
             
             console.log("shape",shape)

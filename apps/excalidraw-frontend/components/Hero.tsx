@@ -25,16 +25,17 @@ export const Hero = ()=>{
 
     }
     return(
-        <motion.div    animate={{
-            backgroundPositionX:"100%"
-          }}
-          transition={{
-              repeat:Infinity,
-              duration:60,
-              ease:'linear'
-          }}
-           style={{backgroundImage:`url(${stars})`}}
-        className="w-full flex justify-center h-full z-10 py-20">
+        <motion.div   
+        //  animate={{
+        //     backgroundPositionX:"100%"
+        //   }}
+        //   transition={{
+        //       repeat:Infinity,
+        //       duration:60,
+        //       ease:'linear'
+        //   }}
+        //    style={{backgroundImage:`url(${stars})`}}
+        className="w-full flex justify-center h-full z-10 py-20 dark:bg-black bg-white">
      <section 
         className="py-4  ">
           <motion.div
@@ -42,14 +43,15 @@ export const Hero = ()=>{
            className="pt-24 rounded-xl   group  ">
               
               <div className="relative">
-              <h2 className="text-5xl md:text-6xl max-w-sm mx-auto tracking-tighter text-center text-white font-primary font-medium">
+              <h2 className="text-5xl md:text-6xl max-w-sm mx-auto tracking-tighter text-center dark:text-white text-black font-primary font-medium">
                 slapdash
-        </h2>                        <p className="text-center text-lg md:text-xl  max-w-xs mx-auto text-white/70 px-4 mt-5 tracking-tighter font-primary ">A fast, simple, and real-time collaborative drawing tool. Bring ideas to life with ease.</p>
+            </h2>                      
+          <p className="text-center text-lg md:text-xl  max-w-xs mx-auto dark:text-white/70 text-black/70 px-4 mt-5 tracking-tighter font-primary ">A fast, simple, and real-time collaborative drawing tool. Bring ideas to life with ease.</p>
                   <div className="flex gap-4 justify-center mt-8">
                   <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={handleCreateRandomRoom}
-                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center bg-white text-black text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
+                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center dark:bg-white bg-black text-white text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PencilIcon className="size-4"/>
                       Start Drawing
@@ -57,7 +59,7 @@ export const Hero = ()=>{
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => router.push('/signin')}
-                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center bg-black text-white border border-white/15 text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
+                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center dark:bg-black dark:text-white bg-white text-black border border-white/15 dark:border-black/15 text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PlayCircle className="size-4"/>
                         Login
