@@ -235,17 +235,38 @@ wss.on("connection",(ws,request)=>{
                 console.log("update_shape_stroke_width", parsedData)
                 
                 // Broadcast to other users
+                let updatedShape = {
+                    ...parsedData?.shape,
+                    strokeWidth: parsedData?.strokeWidth
+                }
                 users.forEach(user => { 
                     if (user.room.includes(parsedData.roomId) && parsedData.sentBy !== user.userId){
                         user.ws.send(JSON.stringify({
                             type: "update_shape_stroke_width",
                             id: parsedData.id,
-                            strokeWidth: parsedData.strokeWidth,
+                            shape: updatedShape,
                             roomId: parsedData.roomId,
                             sentBy: parsedData.sentBy
                         }))
                     }
                 })
+
+                try{
+                    await prismaClient.chat.update({
+                        data:{
+                            message:JSON.stringify(updatedShape)
+                        },
+                        where:{
+                            id:parsedData.id,
+                            roomId:Number(parsedData.roomId)
+                        }
+                    })
+                    console.log("shape updated succesfully")
+                }
+                catch(err){
+                    console.log("Could not update shape")
+                    console.log(err)
+                }
             }
     })
 
