@@ -1,6 +1,7 @@
 import { Game, Shape, shapeArrayType } from "@/draw/Game"
 import { AnimatePresence } from "framer-motion"
 import { motion } from "motion/react"
+import { useEffect, useState } from "react"
 
 interface ShapeConfigModalProps {
     shape: shapeArrayType | undefined,
@@ -11,9 +12,15 @@ interface ShapeConfigModalProps {
 }
 
 
-export const ShapeConfigModal = (props: ShapeConfigModalProps) => {
+export const ShapeConfigModal = (props:ShapeConfigModalProps) => {
 
-    console.log(props.game?.clickedShape,99)
+    
+
+    useEffect(()=>{
+        console.log("ShapeConfigModal useEffect triggered", props.game?.clickedShapeIndex, props.game?.clickedShape)
+    },[props.game?.clickedShapeIndex, props.game?.clickedShape])
+
+    console.log("ShapeConfigModal render", props.showShapeConfigModal, props.game?.clickedShape,99)
     return (
         <AnimatePresence>
             {props.showShapeConfigModal && (

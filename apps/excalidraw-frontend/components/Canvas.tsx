@@ -16,8 +16,8 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [selectedTool, setSelectedTool] = useState<Tool>("rect");
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [showShapeConfigModal,setShowShapeConfigModal] = useState(false)
-    
+    const [showShapeConfigModal, setShowShapeConfigModal] = useState(false);
+    const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
@@ -62,16 +62,31 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     }, []);
 
 
-        console.log(game?.clickedShapeIndex,9999)
-    useEffect(()=>{
-        if(game?.clickedShapeIndex !== undefined && game?.clickedShapeIndex !== -1){
-            setShowShapeConfigModal(true)
-        }
-        else{
-            setShowShapeConfigModal(false)
-        }
-    },[game?.clickedShapeIndex])
-  
+    console.log(game?.clickedShape,9999)
+
+    // Poll for shape selection changes since Game class doesn't trigger React re-renders
+    useEffect(() => {
+        if (!game) return;
+        
+        const interval = setInterval(() => {
+            const currentIndex = game.clickedShapeIndex;
+            const currentShape = game.clickedShape;
+            
+            if (currentIndex !== shapeSelectionState.index || currentShape !== shapeSelectionState.shape) {
+                console.log("Shape selection changed via polling:", currentIndex, currentShape);
+                setShapeSelectionState({ index: currentIndex, shape: currentShape });
+                
+                if (currentIndex !== undefined && currentIndex !== -1) {
+                    setShowShapeConfigModal(true);
+                } else {
+                    setShowShapeConfigModal(false);
+                }
+            }
+        }, 100); // Check every 100ms
+        
+        return () => clearInterval(interval);
+    }, [game, shapeSelectionState.index, shapeSelectionState.shape]);
+
     // Hook to manage zoom and pan functionality
     useZoomPan({
         canvasRef,
@@ -91,7 +106,13 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             <canvas className=""         
              ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
-            <ShapeConfigModal game={game} clickedShapeIndex={game?.clickedShapeIndex} shape={game?.clickedShape} showShapeConfigModal={showShapeConfigModal} setShowShapeConfigModal={setShowShapeConfigModal} />
+            <ShapeConfigModal 
+                game={game} 
+                clickedShapeIndex={shapeSelectionState.index} 
+                shape={shapeSelectionState.shape}
+                showShapeConfigModal={showShapeConfigModal}
+                setShowShapeConfigModal={setShowShapeConfigModal}
+            />
 
         </div>
     );

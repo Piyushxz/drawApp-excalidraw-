@@ -95,6 +95,7 @@ export class Game {
     private setSelectedTool : Dispatch<SetStateAction<Tool>>;
     private session:Session
 
+
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
 
@@ -488,9 +489,10 @@ export class Game {
             );
     
             console.log("shape from mouse", shapeVal);
-    
+            
             if (shapeVal) {
                 this.clickedShape = shapeVal;
+                console.log("clicked shape 818818",this.clickedShape)
                 this.clickedShapeIndex = shapeVal.id;
                 this.prevShape = JSON.parse(JSON.stringify(shapeVal));
                 this.isDragging = true;
