@@ -9,7 +9,7 @@ export async function getExisitingShapes(roomId:string) {
 
     const shapes2 = messages.map(({id,message}:{id:number,message:string})=>{
         const messageData = JSON.parse(message)
-        return {id,shape:messageData.shape
+        return {id,shape:messageData.shape,color:messageData?.color || "#ffffff",strokeWidth:messageData?.strokeWidth || 2
         }})
     
 

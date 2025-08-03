@@ -153,6 +153,14 @@ export class Game {
             console.log("shape",shape)
         }
         this.clearCanvas();
+        this.socket.send(JSON.stringify({
+            type:"update_shape_color",
+            id:id,
+            shape:shape,
+            color:color,
+            roomId:this.roomId,
+            sentBy : this.session.accessToken
+        }))
     }
 
     public updateShapeStrokeWidth(id:number,strokeWidth:number){
@@ -162,7 +170,42 @@ export class Game {
             console.log("shape",shape)
         }
         this.clearCanvas();
+        this.socket.send(JSON.stringify({
+            type:"update_shape_stroke_width",
+            id:id,
+            strokeWidth:strokeWidth,
+            roomId:this.roomId,
+            sentBy : this.session.accessToken
+        }))
     }
+
+    // Helper method to draw rounded rectangle
+    private drawRoundedRect(x: number, y: number, width: number, height: number, radius: number = 8) {
+        // Handle negative width/height by adjusting coordinates
+        const actualX = width < 0 ? x + width : x;
+        const actualY = height < 0 ? y + height : y;
+        const actualWidth = Math.abs(width);
+        const actualHeight = Math.abs(height);
+        
+        // Ensure radius doesn't exceed half the smallest dimension
+        const maxRadius = Math.min(actualWidth, actualHeight) / 2;
+        const finalRadius = Math.min(radius, maxRadius);
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(actualX + finalRadius, actualY);
+        this.ctx.lineTo(actualX + actualWidth - finalRadius, actualY);
+        this.ctx.quadraticCurveTo(actualX + actualWidth, actualY, actualX + actualWidth, actualY + finalRadius);
+        this.ctx.lineTo(actualX + actualWidth, actualY + actualHeight - finalRadius);
+        this.ctx.quadraticCurveTo(actualX + actualWidth, actualY + actualHeight, actualX + actualWidth - finalRadius, actualY + actualHeight);
+        this.ctx.lineTo(actualX + finalRadius, actualY + actualHeight);
+        this.ctx.quadraticCurveTo(actualX, actualY + actualHeight, actualX, actualY + actualHeight - finalRadius);
+        this.ctx.lineTo(actualX, actualY + finalRadius);
+        this.ctx.quadraticCurveTo(actualX, actualY, actualX + finalRadius, actualY);
+        this.ctx.closePath();
+        this.ctx.stroke();
+    }
+
+
 
     // Method to draw preview shapes with transformations
     private drawPreview() {
@@ -179,7 +222,7 @@ export class Game {
         const height = this.currentMouseY - this.startY;
         
         if (selectedTool === "rect") {
-            this.ctx.strokeRect(this.startX, this.startY, width, height);   
+            this.drawRoundedRect(this.startX, this.startY, width, height);   
         } else if (selectedTool === "circle") {
             const radius = Math.max(width, height) / 2;
             const centerX = this.startX + radius;
@@ -370,8 +413,22 @@ export class Game {
                 }
 
                 this.clearCanvas()
-                  
-
+            }
+            else if(message.type === 'update_shape_color'){
+                console.log("update_shape_color received", message);
+                let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.id);
+                if (shapeIndex !== -1) {
+                    this.existingShapes[shapeIndex].color = message.color;
+                    this.clearCanvas();
+                }
+            }
+            else if(message.type === 'update_shape_stroke_width'){
+                console.log("update_shape_stroke_width received", message);
+                let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.id);
+                if (shapeIndex !== -1) {
+                    this.existingShapes[shapeIndex].strokeWidth = message.strokeWidth;
+                    this.clearCanvas();
+                }
             }
         }
     }
@@ -391,8 +448,9 @@ export class Game {
             this.ctx.strokeStyle = color ? color : "#ffffff"; // Default stroke color
             this.ctx.lineWidth = strokeWidth ? strokeWidth : 2; // Reset line width
             
+            console.log("shape",shape)
             if (shape.type === "rect") {
-                this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+                this.drawRoundedRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "circle") {
                 this.ctx.beginPath();
                 this.ctx.arc(shape.centerX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
@@ -499,7 +557,7 @@ export class Game {
         if (this.selectedTool !== "mouse") {
             this.clearSelection();
         }
-    
+
         if (this.selectedTool === "mouse") {
             let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
                 this.isPointInsideShape(transformedCoords.x, transformedCoords.y, shape)

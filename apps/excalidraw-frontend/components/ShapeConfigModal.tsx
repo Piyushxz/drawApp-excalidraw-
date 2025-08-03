@@ -58,7 +58,7 @@ export const ShapeConfigModal = (props: ShapeConfigModalProps) => {
     },[props.showShapeConfigModal])
     return (
         <AnimatePresence mode="popLayout">
-            {props.showShapeConfigModal && (
+            {props.showShapeConfigModal && props.game?.selectedTool !== 'eraser' && (
                 <motion.div
                     initial={{ x: -100 }}
                     animate={{ x: 0 }}

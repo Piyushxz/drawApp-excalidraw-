@@ -8,7 +8,8 @@ import { Arrow } from "./icons/Arrow";
 import { Eraser } from "./icons/Eraser";
 import { Mouse } from "./icons/Mouse";
 import { HandGrab } from "./icons/Hand";
-export type Tool= "rect" | "pencil" | "circle" | "diamond" | "line" | "arrow" | "eraser" | "mouse" | "hand"
+import { Text } from "./icons/Text";
+export type Tool= "rect" | "pencil" | "circle" | "diamond" | "line" | "arrow" | "eraser" | "mouse" | "hand" | "text"
 
 
 
@@ -59,13 +60,17 @@ export default function ShapeOptionBar({
           selectedTool={selectedTool}
           size="lg"
           onClick={()=>setSelectedTool("arrow")}
+
           />
+          <Text selectedTool={selectedTool}
+          size="lg"
+          onClick={()=>setSelectedTool("text")}/>
           <div className="h-8 border border-white/15"></div>
+
           <Eraser selectedTool={selectedTool}
           size="lg"
           onClick={()=>setSelectedTool("eraser")}/>
-
-
+  
         </div>
       </div>
     );
