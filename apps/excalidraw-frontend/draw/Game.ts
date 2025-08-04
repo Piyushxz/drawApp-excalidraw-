@@ -569,7 +569,6 @@ export class Game {
                 this.isPointInsideShape(transformedCoords.x, transformedCoords.y, shape)
             );
     
-            console.log("shape from mouse", shapeVal);
             
             if (shapeVal) {
                 this.clickedShape = shapeVal;

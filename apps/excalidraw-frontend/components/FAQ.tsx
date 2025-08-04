@@ -41,7 +41,7 @@ export const FAQS = () => {
           FAQ
         </span>
       </div>
-      <h2 className="mt-3 text-3xl md:text-4xl text-center max-w-xs mx-auto tracking-tight text-white font-primary font-medium">
+      <h2 className="mt-3 text-3xl md:text-4xl text-center max-w-xs mx-auto tracking-tight text-gray-900 dark:text-white font-primary font-medium">
         Frequently Asked Questions
       </h2>
 
@@ -49,7 +49,7 @@ export const FAQS = () => {
         {faqData.map((faq, index) => (
           <AnimatePresence key={index}>
             <motion.div
-              className="bg-[#65e6bf]/10 rounded-lg w-[80vw] md:w-[40vw] overflow-hidden"
+              className="bg-gray-100 dark:bg-[#65e6bf]/10 rounded-lg w-[80vw] md:w-[40vw] overflow-hidden border border-gray-200 dark:border-transparent"
               initial={{ scaleY: 0.95, opacity: 0.8 }}
               animate={{
                 scaleY: openIndex === index ? 1.06 : 1,
@@ -69,12 +69,12 @@ export const FAQS = () => {
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="h-12 cursor-pointer flex justify-between items-center rounded-lg px-4 py-2"
               >
-                <h3 className="text-white tracking-tight">{faq.question}</h3>
+                <h3 className="text-gray-900 dark:text-white tracking-tight">{faq.question}</h3>
                 <motion.div
                   animate={{ rotate: openIndex === index ? 45 : 0 }}
                   transition={{ type: "spring", stiffness: 600, damping: 20 }}
                 >
-                  <PlusIcon className="text-white" />
+                  <PlusIcon className="text-gray-900 dark:text-white" />
                 </motion.div>
               </div>
 
@@ -94,7 +94,7 @@ export const FAQS = () => {
                     duration: 0.3, // Snappier feel
                   }}
                   style={{ originY: 0 }}
-                  className="text-white tracking-tight p-4 text-xs md:text-sm"
+                  className="text-gray-700 dark:text-white tracking-tight p-4 text-xs md:text-sm"
                 >
                   {faq.answer}
                 </motion.div>

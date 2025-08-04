@@ -51,7 +51,7 @@ export const Hero = ()=>{
                   <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={handleCreateRandomRoom}
-                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center dark:bg-white bg-black text-white text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
+                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center dark:bg-white bg-black text-white dark:text-black text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PencilIcon className="size-4"/>
                       Start Drawing
@@ -59,14 +59,14 @@ export const Hero = ()=>{
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => router.push('/signin')}
-                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center dark:bg-black dark:text-white bg-white text-black border border-white/15 dark:border-black/15 text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
+                      className="inline-flex  gap-2 items-center tracking-tighter items-center justify-center dark:bg-black dark:text-white bg-white text-black border border-gray-200 dark:border-white/15 text-sm hover:opacity-80 transition-all duration-300 h-11 rounded-md px-6 md:px-8"
                     >
                         <PlayCircle className="size-4"/>
                         Login
                     </motion.button>
                   </div>
 
-                  <section className="py-10 flex justify-center">
+                  {/* <section className="py-10 flex justify-center">
                     <div className="container w-[70vw] md:w-[25vw]">
                       <div style={{ maskImage: "linear-gradient(to right, transparent, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 80%, transparent)" }}
                        className="flex  overflow-hidden pr-5 ">
@@ -87,7 +87,7 @@ export const Hero = ()=>{
   
 
                     </div>
-                  </section>
+                  </section> */}
               </div>
 
           </motion.div>

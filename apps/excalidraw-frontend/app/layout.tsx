@@ -16,8 +16,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'light' || theme === 'dark') {
+                    document.documentElement.classList.add(theme);
+                  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.add('light');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
-        className={`font-satoshi bg-black `}
+        className="font-satoshi bg-white dark:bg-black transition-colors duration-300"
       >
           <Toaster theme="dark" richColors />
 
