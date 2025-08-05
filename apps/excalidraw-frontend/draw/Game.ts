@@ -553,36 +553,45 @@ export class Game {
         
                 let minX: number, minY: number, maxX: number, maxY: number;
                 if (shape.type === "rect") {
-                    let paddingX = 5; 
-                    let paddingY = 2; 
-                
-                    minX = shape.x - paddingX;
-                    minY = shape.y - paddingY;
-                    maxX = shape.x + shape.width + paddingX;
-                    maxY = shape.y + shape.height + paddingY;
+                    // Handle negative width/height by calculating actual bounds
+                    const actualX = shape.width < 0 ? shape.x + shape.width : shape.x;
+                    const actualY = shape.height < 0 ? shape.y + shape.height : shape.y;
+                    const actualWidth = Math.abs(shape.width);
+                    const actualHeight = Math.abs(shape.height);
+                    
+                    // Add consistent padding for all shapes
+                    const padding = 5;
+                    minX = actualX - padding;
+                    minY = actualY - padding;
+                    maxX = actualX + actualWidth + padding;
+                    maxY = actualY + actualHeight + padding;
                 } else if (shape.type === "circle") {
-                    minX = shape.centerX - shape.radius;
-                    minY = shape.centerY - shape.radius;
-                    maxX = shape.centerX + shape.radius;
-                    maxY = shape.centerY + shape.radius;
+                    const padding = 5;
+                    minX = shape.centerX - shape.radius - padding;
+                    minY = shape.centerY - shape.radius - padding;
+                    maxX = shape.centerX + shape.radius + padding;
+                    maxY = shape.centerY + shape.radius + padding;
                 } else if (shape.type === "diamond") {
-                    minX = Math.min(shape.x1, shape.x2, shape.x3, shape.x4);
-                    minY = Math.min(shape.y1, shape.y2, shape.y3, shape.y4);
-                    maxX = Math.max(shape.x1, shape.x2, shape.x3, shape.x4);
-                    maxY = Math.max(shape.y1, shape.y2, shape.y3, shape.y4);
+                    const padding = 5;
+                    minX = Math.min(shape.x1, shape.x2, shape.x3, shape.x4) - padding;
+                    minY = Math.min(shape.y1, shape.y2, shape.y3, shape.y4) - padding;
+                    maxX = Math.max(shape.x1, shape.x2, shape.x3, shape.x4) + padding;
+                    maxY = Math.max(shape.y1, shape.y2, shape.y3, shape.y4) + padding;
                 } else if (shape.type === "line" || shape.type === "arrow") {
-                    minX = Math.min(shape.x1, shape.x2);
-                    minY = Math.min(shape.y1, shape.y2);
-                    maxX = Math.max(shape.x1, shape.x2);
-                    maxY = Math.max(shape.y1, shape.y2);
+                    const padding = 5;
+                    minX = Math.min(shape.x1, shape.x2) - padding;
+                    minY = Math.min(shape.y1, shape.y2) - padding;
+                    maxX = Math.max(shape.x1, shape.x2) + padding;
+                    maxY = Math.max(shape.y1, shape.y2) + padding;
                 } else if (shape.type === "pencil") {
                     // For pencil shapes, calculate bounds from all points
                     const points = shape.points;
                     if (points.length > 0) {
-                        minX = Math.min(...points.map(p => p.x));
-                        minY = Math.min(...points.map(p => p.y));
-                        maxX = Math.max(...points.map(p => p.x));
-                        maxY = Math.max(...points.map(p => p.y));
+                        const padding = 5;
+                        minX = Math.min(...points.map(p => p.x)) - padding;
+                        minY = Math.min(...points.map(p => p.y)) - padding;
+                        maxX = Math.max(...points.map(p => p.x)) + padding;
+                        maxY = Math.max(...points.map(p => p.y)) + padding;
                     } else {
                         return; // Skip if no points
                     }
@@ -590,16 +599,10 @@ export class Game {
                     return; // Skip if shape type is not handled
                 }
         
-                let boxSize = Math.max(maxX - minX, maxY - minY);
-                let centerX = (minX + maxX) / 2;
-                let centerY = (minY + maxY) / 2;
-                let squareX = centerX - boxSize / 2;
-                let squareY = centerY - boxSize / 2;
+                // Draw selection box with consistent styling
                 this.ctx.setLineDash([5, 5]); // Creates a dashed effect
-                // this.ctx.globalAlpha = 0.6; // Reduces opacity
-                this.ctx.strokeRect(squareX - 5, squareY - 5, boxSize + 10, boxSize + 10);
+                this.ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
                 this.ctx.setLineDash([]); // Reset line dash to solid for other drawings
-                // this.ctx.globalAlpha = 1; // Reset opacity to normal
             }
         });
         
