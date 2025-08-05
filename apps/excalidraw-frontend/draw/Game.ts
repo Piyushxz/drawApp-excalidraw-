@@ -179,6 +179,7 @@ export class Game {
         this.socket.send(JSON.stringify({
             type:"update_shape_stroke_width",
             id:id,
+            shape:shape,
             strokeWidth:strokeWidth,
             roomId:this.roomId,
             sentBy : this.session.accessToken
@@ -421,7 +422,7 @@ export class Game {
                 this.clearCanvas()
             }
             else if(message.type === 'update_shape_color'){
-                console.log("update_shape_color received", message);
+                console.log("update_shape_color received 69", message);
                 let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.id);
                 if (shapeIndex !== -1) {
                     this.existingShapes[shapeIndex].color = message.color;
@@ -429,10 +430,12 @@ export class Game {
                 }
             }
             else if(message.type === 'update_shape_stroke_width'){
-                console.log("update_shape_stroke_width received", message);
+                console.log("update_shape_stroke_width received 69", message);
                 let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.id);
                 if (shapeIndex !== -1) {
-                    this.existingShapes[shapeIndex].strokeWidth = message.strokeWidth;
+                    let shape = this.existingShapes[shapeIndex].shape
+
+                    this.existingShapes[shapeIndex].strokeWidth =message.shape?.strokeWidth;
                     this.clearCanvas();
                 }
             }
