@@ -120,6 +120,7 @@ export class Game {
         this.clearCanvas()
         this.setSelectedTool = setSelectedTool
         this.session = session
+        this.updateCursor(); // Set initial cursor
     }
 
     // Method to update zoom and pan state
@@ -308,6 +309,44 @@ export class Game {
         if(this.selectedTool !== 'arrow'){
             this.clickedShape = undefined;
             this.clickedShapeIndex = -1;
+        }
+        this.updateCursor();
+    }
+
+    // Method to update cursor based on selected tool
+    private updateCursor() {
+        if (!this.canvas) return;
+        
+        // If dragging, show grabbing cursor
+        if (this.isDragging && this.selectedTool === 'mouse') {
+            this.canvas.style.cursor = "grabbing";
+            return;
+        }
+        
+        switch (this.selectedTool) {
+            case "rect":
+            case "circle":
+            case "diamond":
+            case "line":
+            case "arrow":
+            case "pencil":
+                this.canvas.style.cursor = "crosshair";
+                break;
+            case "eraser":
+                this.canvas.style.cursor = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"none\" stroke=\"white\" stroke-width=\"2\"/><circle cx=\"10\" cy=\"10\" r=\"6\" fill=\"none\" stroke=\"black\" stroke-width=\"1\"/></svg>') 10 10, auto";
+                break;
+            case "mouse":
+                this.canvas.style.cursor = "default";
+                break;
+            case "hand":
+                this.canvas.style.cursor = "grab";
+                break;
+            case "text":
+                this.canvas.style.cursor = "text";
+                break;
+            default:
+                this.canvas.style.cursor = "default";
+                break;
         }
     }
 
@@ -512,7 +551,7 @@ export class Game {
                 this.ctx.strokeStyle = "#0096FF"; 
                 this.ctx.lineWidth = 2;
         
-                let minX, minY, maxX, maxY;
+                let minX: number, minY: number, maxX: number, maxY: number;
                 if (shape.type === "rect") {
                     let paddingX = 5; 
                     let paddingY = 2; 
@@ -536,6 +575,19 @@ export class Game {
                     minY = Math.min(shape.y1, shape.y2);
                     maxX = Math.max(shape.x1, shape.x2);
                     maxY = Math.max(shape.y1, shape.y2);
+                } else if (shape.type === "pencil") {
+                    // For pencil shapes, calculate bounds from all points
+                    const points = shape.points;
+                    if (points.length > 0) {
+                        minX = Math.min(...points.map(p => p.x));
+                        minY = Math.min(...points.map(p => p.y));
+                        maxX = Math.max(...points.map(p => p.x));
+                        maxY = Math.max(...points.map(p => p.y));
+                    } else {
+                        return; // Skip if no points
+                    }
+                } else {
+                    return; // Skip if shape type is not handled
                 }
         
                 let boxSize = Math.max(maxX - minX, maxY - minY);
@@ -614,13 +666,19 @@ export class Game {
                         break;
 
                     case "pencil":
-                        this.dragOffset = {
-                            x: transformedCoords.x - shapeVal.shape.points[0].x,
-                            y: transformedCoords.y - shapeVal.shape.points[0].y
-                        };
+                        if (shapeVal.shape.type === "pencil") {
+                            const pencilShape = shapeVal.shape;
+                            if (pencilShape.points.length > 0) {
+                                this.dragOffset = {
+                                    x: transformedCoords.x - pencilShape.points[0].x,
+                                    y: transformedCoords.y - pencilShape.points[0].y
+                                };
+                            }
+                        }
                         break;
                 }
                 this.clearCanvas(); 
+                this.updateCursor(); // Update cursor when dragging starts
 
             }
             else{
@@ -654,6 +712,8 @@ export class Game {
                   sentBy : this.session.accessToken
                }))
         }
+        
+        this.updateCursor(); // Update cursor when mouse is released
 
 
         if (selectedTool === "rect") {
@@ -855,15 +915,21 @@ export class Game {
                     break;
         
                 case "pencil":
-                    let moveDeltaX = transformedCoords.x - this.dragOffset.x;
-                    let moveDeltaY = transformedCoords.y - this.dragOffset.y;
-                    
-                    this.clickedShape.shape.points = this.clickedShape.shape.points.map(point => ({
-                        x: point.x + moveDeltaX - this.clickedShape.shape.points[0].x,
-                        y: point.y + moveDeltaY - this.clickedShape.shape.points[0].y
-                    }));
+                    if (this.clickedShape.shape.type === "pencil") {
+                        const pencilShape = this.clickedShape.shape;
+                        if (pencilShape.points.length > 0) {
+                            let moveDeltaX = transformedCoords.x - this.dragOffset.x;
+                            let moveDeltaY = transformedCoords.y - this.dragOffset.y;
+                            
+                            pencilShape.points = pencilShape.points.map(point => ({
+                                x: point.x + moveDeltaX - pencilShape.points[0].x,
+                                y: point.y + moveDeltaY - pencilShape.points[0].y
+                            }));
+                        }
+                    }
                     break;
             }
+            this.updateCursor(); // Update cursor during dragging
         }
         
     }
