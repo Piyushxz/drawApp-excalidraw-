@@ -1,8 +1,8 @@
 export const Footer = ()=>{
     return(
         <div className="pt-20">
-        <div className="w-full flex justify-center border-t border-gray-200 dark:border-white/15">
-            <div className="w-[80vw] flex justify-none md:justify-between md:flex-row flex-col gap-2 py-14 items-center">
+        <div className="w-full flex justify-center border-t border-gray-200 rounded-t-3xl dark:border-white/15 bg-black dark:bg-white">
+            <div className="w-[80vw] flex justify-none md:justify-between md:flex-row flex-col gap-2 py-20 items-center">
                 <div className="flex gap-2 items-center">
                 <div className="p-1.5 rounded-lg border border-gray-200 dark:border-white/15">
                         <svg
@@ -17,14 +17,14 @@ export const Footer = ()=>{
                         <path d="M232.2,64H428.8L322.62,177.93H125.87Z"></path>
                         </svg>
           </div>
-          <div className="font-semibold text-3xl text-gray-900 dark:text-white tracking-tighter">
+          <div className="font-semibold text-3xl text-white dark:text-black tracking-tighter">
                 slapdash
           </div>
                 </div>
                 <div className="flex gap-8  text-xs md:text-sm">
-                    <h5 className="text-gray-600 dark:text-white/30 hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">Contact</h5>
-                    <h5 className="text-gray-600 dark:text-white/35 hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">Privacy Policy</h5>
-                    <h5 className="text-gray-600 dark:text-white/35 hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors">Terms & Condition</h5>
+                    <h5 className="text-gray-600 dark:text-black/30 hover:text-gray-900 dark:hover:text-black cursor-pointer transition-colors">Contact</h5>
+                    <h5 className="text-gray-600 dark:text-black/35 hover:text-gray-900 dark:hover:text-black cursor-pointer transition-colors">Privacy Policy</h5>
+                    <h5 className="text-gray-600 dark:text-black/35 hover:text-gray-900 dark:hover:text-black cursor-pointer transition-colors">Terms & Condition</h5>
 
 
                 </div>
