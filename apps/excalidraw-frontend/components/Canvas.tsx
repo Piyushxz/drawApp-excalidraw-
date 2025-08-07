@@ -114,7 +114,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         <div className={`h-[100vh] w-full overflow-hidden ${isDark ? 'dark' : ''}`}>
             <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} />
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
-            <canvas className="" ref={canvasRef}></canvas>
+            <canvas className="z-[999]" ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
             <ShapeConfigModal 
                 game={game} 

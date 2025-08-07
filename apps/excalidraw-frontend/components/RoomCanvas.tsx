@@ -4,12 +4,16 @@ import { WS_URL } from "@/config"
 import { Session } from "next-auth"
 import ClientCanvas from "./Canvas"
 import { getSession } from "next-auth/react"
+import { motion } from "motion/react"
+import { ShapeLoading } from "./ShapeLoading"
 
 
 export default function RoomCanvas({roomId}:{roomId:string}){
 
     const [socket,setSocket] = useState<WebSocket | null>(null)
     const [session,setSession] = useState<Session | null>(null)
+    const [showCanvas, setShowCanvas] = useState(false)
+    
     useEffect(()=>{
 
         let ws : WebSocket
@@ -20,7 +24,7 @@ export default function RoomCanvas({roomId}:{roomId:string}){
              if(session){
                 setSession( session)
              }
-              ws = new WebSocket(`${WS_URL}/?token=${session?.accessToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'}`)
+             ws = new WebSocket(`${WS_URL}/?token=${session?.accessToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'}`)
              console.log(`${WS_URL}/?token=${session?.accessToken}`)
              ws.onopen =()=>{
                  setSocket(ws)
@@ -30,6 +34,11 @@ export default function RoomCanvas({roomId}:{roomId:string}){
                      type:"join_room",
                      roomId:roomId
                  }))
+                 
+                 // Add delay to show loading animation
+                 setTimeout(() => {
+                     setShowCanvas(true)
+                 }, 1000) // 3 second delay
      
              }
              ws.onclose = () => {
@@ -44,8 +53,9 @@ export default function RoomCanvas({roomId}:{roomId:string}){
 
     }
     ,[roomId])
-    if (!socket ) {
-        return <div className="text-white">Joining...</div>;
+    
+    if (!socket || !showCanvas) {
+                return <ShapeLoading/>
     }
 
  
