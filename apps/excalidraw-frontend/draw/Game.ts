@@ -40,7 +40,11 @@ export type Shape = {
     type: "circle";
     centerX: number;
     centerY: number;
-    radius: number;
+    // Support ellipse like Excalidraw
+    radiusX?: number;
+    radiusY?: number;
+    // Backward compatibility for older shapes
+    radius?: number;
 } | {
     type: "pencil";
     points : Point[]
@@ -72,6 +76,16 @@ export type Shape = {
    y1:number,
    x2:number,
    y2:number
+}
+|{
+    type: 'text';
+    x: number;
+    y: number;
+    text: string;
+    fontSize: number;
+    fontFamily: string;
+    width?: number;
+    height?: number;
 }
 
 
@@ -232,11 +246,13 @@ export class Game {
         if (selectedTool === "rect") {
             this.drawRoundedRect(this.startX, this.startY, width, height);   
         } else if (selectedTool === "circle") {
-            const radius = Math.max(width, height) / 2;
-            const centerX = this.startX + radius;
-            const centerY = this.startY + radius;
+            // Excalidraw-like ellipse (fits the drag rectangle)
+            const centerX = this.startX + width / 2;
+            const centerY = this.startY + height / 2;
+            const rx = Math.abs(width) / 2;
+            const ry = Math.abs(height) / 2;
             this.ctx.beginPath();
-            this.ctx.arc(centerX, centerY, Math.abs(radius), 0, Math.PI * 2);
+            this.ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
             this.ctx.stroke();
             this.ctx.closePath();                
         } else if(selectedTool === 'pencil'){
@@ -359,13 +375,22 @@ export class Game {
     isPointInsideShape(x: number, y: number, shape: Shape): boolean {
 
         if (shape.type === "rect") {
-            return x >= shape.x && x <= shape.x + shape.width &&
-                   y >= shape.y && y <= shape.y + shape.height;
+            // Handle negative width/height by computing actual bounds
+            const actualX = shape.width < 0 ? shape.x + shape.width : shape.x;
+            const actualY = shape.height < 0 ? shape.y + shape.height : shape.y;
+            const actualWidth = Math.abs(shape.width);
+            const actualHeight = Math.abs(shape.height);
+            return x >= actualX && x <= actualX + actualWidth &&
+                   y >= actualY && y <= actualY + actualHeight;
         } 
         else if (shape.type === "circle") {
-            const dx = x - shape.centerX;
-            const dy = y - shape.centerY;
-            return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
+            // Treat as ellipse. Fallback to circle if radius provided.
+            const rx = shape.radiusX ?? shape.radius ?? 0;
+            const ry = shape.radiusY ?? shape.radius ?? 0;
+            if (rx === 0 && ry === 0) return false;
+            const dx = (x - shape.centerX) / rx;
+            const dy = (y - shape.centerY) / ry;
+            return (dx * dx + dy * dy) <= 1;
         } 
         else if (shape.type === "diamond") {
             return isPointInsidePolygon(x, y, [
@@ -380,6 +405,15 @@ export class Game {
         } 
         else if (shape.type === "pencil") {
             return isPointNearPencilPath(x, y, shape.points);
+        }
+        else if (shape.type === "text") {
+            // For text, check if point is within the text bounds
+            this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+            const textMetrics = this.ctx.measureText(shape.text);
+            const textWidth = shape.width || textMetrics.width;
+            const textHeight = shape.height || shape.fontSize;
+            return x >= shape.x && x <= shape.x + textWidth &&
+                   y >= shape.y - textHeight && y <= shape.y;
         }
         return false;
     }
@@ -491,19 +525,24 @@ export class Game {
         this.ctx.translate(this.panOffset.x, this.panOffset.y);
         this.ctx.scale(this.zoom / 100, this.zoom / 100);
 
+        // Rendering existing shapes
         this.existingShapes.forEach(({ shape, id ,color,strokeWidth}) => {
-    
+            
             this.ctx.strokeStyle = color ? color : (this.isDarkTheme ? "#ffffff" : "#000000"); // Theme-appropriate default color
             this.ctx.lineWidth = strokeWidth ? strokeWidth : 2; // Reset line width
+            this.ctx.fillStyle = color ? color : (this.isDarkTheme ? "#ffffff" : "#000000"); // For text fill
             
-            console.log("shape",shape)
             if (shape.type === "rect") {
                 this.drawRoundedRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "circle") {
-                this.ctx.beginPath();
-                this.ctx.arc(shape.centerX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
-                this.ctx.stroke();
-                this.ctx.closePath();
+                const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
+                const ry = Math.abs(shape.radiusY ?? shape.radius ?? 0);
+                if (rx > 0 && ry > 0) {
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(shape.centerX, shape.centerY, rx, ry, 0, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                }
             } else if (shape.type === "diamond") {
                 this.ctx.beginPath();
                 this.ctx.moveTo(shape.x1, shape.y1);
@@ -544,6 +583,10 @@ export class Game {
                     this.ctx.stroke();
                 }
             }
+            else if (shape.type === "text") {
+                this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+                this.ctx.fillText(shape.text, shape.x, shape.y);
+            }
             
             
         
@@ -558,8 +601,6 @@ export class Game {
                     const actualY = shape.height < 0 ? shape.y + shape.height : shape.y;
                     const actualWidth = Math.abs(shape.width);
                     const actualHeight = Math.abs(shape.height);
-                    
-                    // Add consistent padding for all shapes
                     const padding = 5;
                     minX = actualX - padding;
                     minY = actualY - padding;
@@ -567,10 +608,12 @@ export class Game {
                     maxY = actualY + actualHeight + padding;
                 } else if (shape.type === "circle") {
                     const padding = 5;
-                    minX = shape.centerX - shape.radius - padding;
-                    minY = shape.centerY - shape.radius - padding;
-                    maxX = shape.centerX + shape.radius + padding;
-                    maxY = shape.centerY + shape.radius + padding;
+                    const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
+                    const ry = Math.abs(shape.radiusY ?? shape.radius ?? 0);
+                    minX = shape.centerX - rx - padding;
+                    minY = shape.centerY - ry - padding;
+                    maxX = shape.centerX + rx + padding;
+                    maxY = shape.centerY + ry + padding;
                 } else if (shape.type === "diamond") {
                     const padding = 5;
                     minX = Math.min(shape.x1, shape.x2, shape.x3, shape.x4) - padding;
@@ -729,12 +772,19 @@ export class Game {
                 width
             }
         } else if (selectedTool === "circle") {
-            const radius = Math.max(width, height) / 2;
+            // Create ellipse like Excalidraw
+            const endX = this.startX + width;
+            const endY = this.startY + height;
+            const centerX = (this.startX + endX) / 2;
+            const centerY = (this.startY + endY) / 2;
+            const rx = Math.abs(endX - this.startX) / 2;
+            const ry = Math.abs(endY - this.startY) / 2;
             shape = {
                 type: "circle",
-                radius: radius,
-                centerX: this.startX + radius,
-                centerY: this.startY + radius,
+                centerX,
+                centerY,
+                radiusX: rx,
+                radiusY: ry
             }
 
         }
