@@ -9,5 +9,5 @@ export function Redirect({ to }: { to: string }) {
     router.push(to);
   }, []);
 
-  return <div></div>;
+  return <div></div>
 }

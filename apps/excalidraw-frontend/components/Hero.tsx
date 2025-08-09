@@ -1,6 +1,6 @@
 "use client"
 import axios from "axios"
-import { Circle, Diamond, Eraser, PencilIcon, Pentagon, PlayCircle, Square, Video } from "lucide-react"
+import { Circle, Code, Diamond, Eraser, LayoutDashboard, Pencil, PencilIcon, Pentagon, PlayCircle, Sparkles, Square, Triangle, Video } from "lucide-react"
 import {motion} from "motion/react"
 import { useRouter } from "next/navigation"
 import {uuid} from "@repo/common/types"
@@ -36,6 +36,10 @@ export const Hero = ()=>{
         //   }}
         //    style={{backgroundImage:`url(${stars})`}}
         className="w-full flex justify-center h-full z-10 py-20 dark:bg-black bg-white">
+  <Pencil className="absolute top-10 left-16 text-[#65e6bf] opacity-30 w-20 h-20" />
+    <Code className="absolute bottom-20 left-40 text-[#65e6bf] opacity-20 w-24 h-24" />
+    <Triangle className="absolute top-20 right-32 text-[#65e6bf] opacity-25 w-16 h-16" />
+    <Sparkles className="absolute bottom-10 right-16 text-[#65e6bf] opacity-30 w-20 h-20" />
      <section 
         className="py-4  ">
           <motion.div

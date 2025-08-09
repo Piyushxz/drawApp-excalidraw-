@@ -9,23 +9,29 @@ import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
 import { ShapeConfigModal } from "./ShapeConfigModal";
 import ThemeToggle from "./ThemeToggle";
+import MultiStepComponent from "./Welcome";
+import { Menu } from "./Menu";
+import { useTheme } from "@/contexts/ThemeContext";
 
 
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
 
     const [game, setGame] = useState<Game>();
     const [selectedTool, setSelectedTool] = useState<Tool>("rect");
-
+    const { theme, toggleTheme } = useTheme();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [showShapeConfigModal, setShowShapeConfigModal] = useState(false);
     const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
 
     // Theme state
-    const [isDark, setIsDark] = useState(true); // Default to dark mode
+    const [isDark, setIsDark] = useState(theme === "dark"); // Default to dark mode
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
     const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
+
+    // Tutorial state
+    const [showTutorial, setShowTutorial] = useState(false);
 
     useEffect(() => {
         game?.setTool(selectedTool);
@@ -42,6 +48,16 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             };
         }
     }, [canvasRef]);
+
+    // Show tutorial when canvas mounts
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            console.log("Showing tutorial...");
+            setShowTutorial(true);
+        }, 1000); // Increased delay
+
+        return () => clearTimeout(timer);
+    }, []);
 
     // Update game with zoom and pan state
     useEffect(() => {
@@ -112,9 +128,10 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
 
     return (
         <div className={`h-[100vh] w-full overflow-hidden ${isDark ? 'dark' : ''}`}>
-            <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} />
+            {/* <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} /> */}
+            <Menu />
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
-            <canvas className="z-[999]" ref={canvasRef}></canvas>
+            <canvas className="" ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
             <ShapeConfigModal 
                 game={game} 
@@ -123,6 +140,13 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                 showShapeConfigModal={showShapeConfigModal}
                 setShowShapeConfigModal={setShowShapeConfigModal}
             />
+
+            
+            {/* {showTutorial && (
+                <div className="z-[9999]">
+                    <MultiStepComponent onClose={() => setShowTutorial(false)} />
+                </div>
+            )} */}
         </div>
     );
 }

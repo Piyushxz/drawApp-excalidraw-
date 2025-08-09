@@ -8,7 +8,7 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
     return (
-        <div className="fixed top-4 right-4 z-50">
+    <div className="fixed top-4 right-4 z-50">
             <button
                 onClick={() => onToggle(!isDark)}
                 className="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 p-3 rounded-lg shadow-lg border border-gray-600/30 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors duration-200"

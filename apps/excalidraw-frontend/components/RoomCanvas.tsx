@@ -60,7 +60,7 @@ export default function RoomCanvas({roomId}:{roomId:string}){
 
  
     return <div>
-             <ClientCanvas roomId={roomId} socket={socket} session={session!} />;
+             <ClientCanvas roomId={roomId} socket={socket} session={session!} />
 
     </div>
 
