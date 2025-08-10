@@ -24,7 +24,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
 
     // Theme state
-    const [isDark, setIsDark] = useState(theme === "dark"); // Default to dark mode
+    const [isDark, setIsDark] = useState(theme === 'dark'); // Default to dark mode
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
@@ -128,8 +128,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
 
     return (
         <div className={`h-[100vh] w-full overflow-hidden ${isDark ? 'dark' : ''}`}>
-            {/* <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} /> */}
-            <Menu />
+            <Menu game={game!}/>
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
             <canvas className="" ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
