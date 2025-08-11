@@ -14,7 +14,7 @@ export const Menu = ({game}:{game:Game})=>{
         <div className="fixed top-4 right-4 z-50">
 
             <DropdownMenu  >
-                <DropdownMenuTrigger>
+                <DropdownMenuTrigger onClick={() => game.setTool('mouse')}>
                 <button className="border border-white/15 rounded-md dark:bg-[#191919] bg-black p-2 hover:opacity-80 transition-all duration-300">
                     <MenuIcon className="w-6 h-6 text-white " />
                 </button>
@@ -26,7 +26,7 @@ export const Menu = ({game}:{game:Game})=>{
                             <button title="Light Mode" onClick={(e)=>{
                                 e.preventDefault()
                                 e.stopPropagation()
-                                game.setTheme(false)
+                                game.setTheme('light')
                                 toggleTheme()}}>
                                 
                             <Sun className={`size-6 px-1 rounded-md hover:opacity-80 transition-all duration-300 ${theme === 'light' ? 'bg-white text-black ' : 'text-white'}`} 
@@ -36,7 +36,7 @@ export const Menu = ({game}:{game:Game})=>{
                         <button title="Dark Mode" onClick={(e)=>{
                                                            e.preventDefault()
                                                            e.stopPropagation()
-                            game.setTheme(true)
+                            game.setTheme('dark')
                             toggleTheme()}}>
                             <Moon className={`size-6 px-1 rounded-md hover:opacity-80 transition-all duration-300 ${theme === 'dark' ? 'bg-white text-black ' : 'text-white'}`} />
                             </button>
@@ -44,7 +44,7 @@ export const Menu = ({game}:{game:Game})=>{
                         <button title="System Mode" onClick={(e)=>{
                                    e.preventDefault()
                                    e.stopPropagation()
-                            game.setTheme(false)
+                            game.setTheme('system')
                             setSystemTheme()}}>
                             <Monitor className={`size-6 px-1 rounded-md hover:opacity-80 transition-all duration-300 ${theme === 'system' ? 'bg-white text-black ' : 'text-white'}`} />
                             </button>

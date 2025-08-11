@@ -10,7 +10,7 @@ export default function ThemeToggle({game}:{game:Game}) {
     <div className="fixed top-4 right-20 z-50">
             <button
                 onClick={() => {
-                    game && game.setTheme(theme === 'dark' ? false : true)
+                    game && game.setTheme('dark')
                     toggleTheme()}}
                 className="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 p-3 rounded-lg shadow-lg border border-gray-600/30 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors duration-200"
                 title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}

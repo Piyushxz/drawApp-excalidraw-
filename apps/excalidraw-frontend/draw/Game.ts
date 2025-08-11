@@ -30,6 +30,12 @@ interface Diamond{
 
 }
 
+interface Text{
+    text:string,
+    x:number,
+    y:number,
+
+}
 export type Shape = {
     type: "rect";
     x: number;
@@ -59,9 +65,6 @@ export type Shape = {
     y3:number,
     x4:number,
     y4:number,
-    
-    
-
 }
 |{
     type:'line',
@@ -82,10 +85,6 @@ export type Shape = {
     x: number;
     y: number;
     text: string;
-    fontSize: number;
-    fontFamily: string;
-    width?: number;
-    height?: number;
 }
 
 
@@ -111,7 +110,7 @@ export class Game {
     private setSelectedTool : Dispatch<SetStateAction<Tool>>;
     private session:Session
     private isDarkTheme: boolean = true; // Default to dark theme
-
+    public text:Text = {text:"",x:0,y:0}
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
 
@@ -121,7 +120,7 @@ export class Game {
 
     socket: WebSocket;
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket,setSelectedTool :Dispatch<SetStateAction<Tool>>,session:Session) {
+    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, setSelectedTool: Dispatch<SetStateAction<Tool>>, session: Session, initialTheme: 'light' | 'dark' | 'system' = 'dark') {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.existingShapes = [];
@@ -131,9 +130,13 @@ export class Game {
         this.init();
         this.initHandlers();
         this.initMouseHandlers();
-        this.clearCanvas()
-        this.setSelectedTool = setSelectedTool
-        this.session = session
+        this.setSelectedTool = setSelectedTool;
+        this.session = session;
+        
+        // Set initial theme based on parameter
+        this.isDarkTheme = initialTheme === 'dark' || (initialTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        this.clearCanvas();
         this.updateCursor(); // Set initial cursor
     }
 
@@ -144,8 +147,8 @@ export class Game {
     }
 
     // Method to set theme
-    public setTheme(isDark: boolean) {
-        this.isDarkTheme = isDark;
+    public setTheme(theme: 'light' | 'dark' | 'system') {
+        this.isDarkTheme = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         this.clearCanvas();
     }
 
@@ -183,6 +186,7 @@ export class Game {
             sentBy : this.session.accessToken
         }))
     }
+    
 
     public updateShapeStrokeWidth(id:number,strokeWidth:number){
         let shape = this.existingShapes.find(shapeItem => shapeItem.id === id) ;
@@ -265,14 +269,23 @@ export class Game {
             this.ctx.stroke();
             this.ctx.closePath();
         } else if(selectedTool === 'diamond'){
+            // Calculate diamond points correctly
             const centerX = this.startX + width / 2;
             const centerY = this.startY + height / 2;
-
+            const x1 = centerX; // Top
+            const y1 = this.startY;
+            const x2 = this.startX + width; // Right
+            const y2 = centerY;
+            const x3 = centerX; // Bottom
+            const y3 = this.startY + height;
+            const x4 = this.startX; // Left
+            const y4 = centerY;
+            
             this.ctx.beginPath();
-            this.ctx.moveTo(centerX, this.startY); // Top point
-            this.ctx.lineTo(this.startX, centerY); // Left point
-            this.ctx.lineTo(centerX, this.startY + height); // Bottom point
-            this.ctx.lineTo(this.startX + width, centerY); // Right point
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.lineTo(x3, y3);
+            this.ctx.lineTo(x4, y4);
             this.ctx.closePath();
             this.ctx.stroke();
         } else if(selectedTool === 'line'){
@@ -366,6 +379,17 @@ export class Game {
         }
     }
 
+    public sendText(){
+        this.socket.send(JSON.stringify({
+            type:"text",
+            text:this.text.text,
+            x:this.text.x,
+            y:this.text.y,
+            roomId:this.roomId,
+            sentBy : this.session.accessToken
+        }))
+    }
+    
     // Method to clear shape selection
     clearSelection() {
         this.clickedShape = undefined;
@@ -407,13 +431,13 @@ export class Game {
             return isPointNearPencilPath(x, y, shape.points);
         }
         else if (shape.type === "text") {
-            // For text, check if point is within the text bounds
-            this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-            const textMetrics = this.ctx.measureText(shape.text);
-            const textWidth = shape.width || textMetrics.width;
-            const textHeight = shape.height || shape.fontSize;
-            return x >= shape.x && x <= shape.x + textWidth &&
-                   y >= shape.y - textHeight && y <= shape.y;
+            // // For text, check if point is within the text bounds
+            // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+            // const textMetrics = this.ctx.measureText(shape.text);
+            // const textWidth = shape.width || textMetrics.width;
+            // const textHeight = shape.height || shape.fontSize;
+            // return x >= shape.x && x <= shape.x + textWidth &&
+            //        y >= shape.y - textHeight && y <= shape.y;
         }
         return false;
     }
@@ -512,6 +536,18 @@ export class Game {
                     this.clearCanvas();
                 }
             }
+            else if(message.type === 'text'){
+                console.log("text message received", message);
+                const id = message.id; // Don't parse, it's already a number
+                const textShape: Shape = {
+                    type: 'text',
+                    x: message.x,
+                    y: message.y,
+                    text: message.text
+                };
+                this.existingShapes.push({shape: textShape, id});
+                this.clearCanvas();
+            }
         }
     }
 
@@ -584,12 +620,13 @@ export class Game {
                 }
             }
             else if (shape.type === "text") {
-                this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-                this.ctx.fillText(shape.text, shape.x, shape.y);
+                // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+                console.log(shape, 696969)
+                this.ctx.font = '24px sans-serif'
+                this.ctx.fillText(shape.text,shape.x,shape.y)   
             }
             
             
-        
             if (this.clickedShape && this.clickedShape.shape === shape ) {
                 this.ctx.strokeStyle = "#0096FF"; 
                 this.ctx.lineWidth = 2;
@@ -659,6 +696,7 @@ export class Game {
         this.startX = transformedCoords.x;
         this.startY = transformedCoords.y;
         this.isDragging = false;
+        console.log(this.selectedTool,'tool')
 
         // Clear selection if not using mouse tool
         if (this.selectedTool !== "mouse") {
@@ -687,8 +725,9 @@ export class Game {
                         break;
 
                     case "diamond":
-                        let centerX = (shapeVal.shape.x1 + shapeVal.shape.x3) / 2;
-                        let centerY = (shapeVal.shape.y1 + shapeVal.shape.y3) / 2;
+                        // Calculate center of diamond for drag offset
+                        const centerX = (shapeVal.shape.x1 + shapeVal.shape.x2 + shapeVal.shape.x3 + shapeVal.shape.x4) / 4;
+                        const centerY = (shapeVal.shape.y1 + shapeVal.shape.y2 + shapeVal.shape.y3 + shapeVal.shape.y4) / 4;
 
                         this.dragOffset = {
                             x: transformedCoords.x - centerX,
@@ -722,7 +761,18 @@ export class Game {
                             }
                         }
                         break;
+                    case "text":
+                        // this.dragOffset = {
+                        //     x: transformedCoords.x - shapeVal.shape.x,
+                        //     y: transformedCoords.y - shapeVal.shape.y
+                        // };
+                        this.text.x = transformedCoords.x
+                        this.text.y = transformedCoords.y
+                        console.log(this.text,99)
+                        break;
                 }
+
+                console.log("text",this.text)
                 this.clearCanvas(); 
                 this.updateCursor(); // Update cursor when dragging starts
 
@@ -732,6 +782,7 @@ export class Game {
                 this.clickedShapeIndex = -1;
                 this.clearCanvas();
             }
+
         }
     };
     
@@ -833,9 +884,16 @@ export class Game {
                 y2:this.arrowCoords.P2.y,
             }
         }
+        else if(selectedTool === 'text'){
+            this.text.x = transformedCoords.x;
+            this.text.y = transformedCoords.y;
+            // Don't return here - let the text input handle the actual text creation
+            return;
+        }
         if (!shape) {
             return;
         }
+        console.log(shape)
 
           this.socket.send(JSON.stringify({
               type: "chat",
@@ -870,10 +928,10 @@ export class Game {
             if(this.selectedTool === 'diamond'){
                 const centerX = this.startX + width / 2;
                 const centerY = this.startY + height / 2;
-                this.diamondCoords.P1 = {x:centerX,y:this.startY}
-                this.diamondCoords.P2 = {x:this.startX,y:centerY}
-                this.diamondCoords.P3 = {x:centerX,y:this.startY+height}
-                this.diamondCoords.P4 = {x:this.startX+width,y:centerY}
+                this.diamondCoords.P1 = {x:centerX,y:this.startY} // Top
+                this.diamondCoords.P2 = {x:this.startX + width,y:centerY} // Right
+                this.diamondCoords.P3 = {x:centerX,y:this.startY + height} // Bottom
+                this.diamondCoords.P4 = {x:this.startX,y:centerY} // Left
             }
             
             // Handle line coordinates
@@ -914,15 +972,6 @@ export class Game {
         }
 
 
-
-
-
-
-
-
-
-
-
         if (this.isDragging && this.clickedShape && this.clicked && this.selectedTool === 'mouse') {
             const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
             switch (this.clickedShape.shape.type) {
@@ -932,12 +981,19 @@ export class Game {
                     break;
         
                 case "diamond":
-                    let dxDiamond = transformedCoords.x - this.dragOffset.x;
-                    let dyDiamond = transformedCoords.y - this.dragOffset.y;
-                
-                    let offsetX = dxDiamond - this.clickedShape.shape.x1;
-                    let offsetY = dyDiamond - this.clickedShape.shape.y1;
-                
+                    // Calculate new center position
+                    const newCenterX = transformedCoords.x - this.dragOffset.x;
+                    const newCenterY = transformedCoords.y - this.dragOffset.y;
+                    
+                    // Calculate current center
+                    const currentCenterX = (this.clickedShape.shape.x1 + this.clickedShape.shape.x2 + this.clickedShape.shape.x3 + this.clickedShape.shape.x4) / 4;
+                    const currentCenterY = (this.clickedShape.shape.y1 + this.clickedShape.shape.y2 + this.clickedShape.shape.y3 + this.clickedShape.shape.y4) / 4;
+                    
+                    // Calculate offset
+                    const offsetX = newCenterX - currentCenterX;
+                    const offsetY = newCenterY - currentCenterY;
+                    
+                    // Move all points by the offset
                     this.clickedShape.shape.x1 += offsetX;
                     this.clickedShape.shape.y1 += offsetY;
                     this.clickedShape.shape.x2 += offsetX;

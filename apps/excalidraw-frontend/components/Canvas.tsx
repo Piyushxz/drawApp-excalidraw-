@@ -8,8 +8,6 @@ import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
 import { ShapeConfigModal } from "./ShapeConfigModal";
-import ThemeToggle from "./ThemeToggle";
-import MultiStepComponent from "./Welcome";
 import { Menu } from "./Menu";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -22,6 +20,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [showShapeConfigModal, setShowShapeConfigModal] = useState(false);
     const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
+    const [showTextInput, setShowTextInput] = useState(false);
 
     // Theme state
     const [isDark, setIsDark] = useState(theme === 'dark'); // Default to dark mode
@@ -40,7 +39,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
 
     useEffect(() => {
         if (canvasRef.current ) {
-            const g = new Game(canvasRef.current, roomId, socket,setSelectedTool,session);
+            const g = new Game(canvasRef.current, roomId, socket, setSelectedTool, session, theme);
             setGame(g);
 
             return () => {
@@ -106,6 +105,22 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         return () => clearInterval(interval);
     }, [game, shapeSelectionState.index, shapeSelectionState.shape]);
 
+    // Poll for text input state changes
+    useEffect(() => {
+        if (!game) return;
+        
+        const interval = setInterval(() => {
+            const shouldShowTextInput = game.selectedTool === "text" && game.text.x !== 0 && game.text.y !== 0;
+            
+            if (shouldShowTextInput !== showTextInput) {
+                console.log("Text input state changed:", shouldShowTextInput);
+                setShowTextInput(shouldShowTextInput);
+            }
+        }, 100); // Check every 100ms
+        
+        return () => clearInterval(interval);
+    }, [game, showTextInput]);
+
     // Hook to manage zoom and pan functionality
     useZoomPan({
         canvasRef,
@@ -117,18 +132,47 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         game:game
     });
 
-    // Handle theme toggle
-    const handleThemeToggle = (newIsDark: boolean) => {
-        setIsDark(newIsDark);
-        // Update game theme if game exists
-        if (game) {
-            game.setTheme(newIsDark);
-        }
-    };
 
     return (
-        <div className={`h-[100vh] w-full overflow-hidden ${isDark ? 'dark' : ''}`}>
+        <div className={`h-[100vh] w-full overflow-hidden ${theme === 'dark' ? 'dark' : ''}`}>
+            {
+                    showTextInput && (
+                        <div 
+                            className="absolute w-[100px] h-[30px] z-[9999]" 
+                            style={{
+                                top: `${game?.text.y}px`,
+                                left: `${game?.text.x}px`
+                            }}
+                        >
+                            <input 
+                                type="text" 
+                                className="text-2xl focus:outline-none w-full h-full bg-transparent border-none " 
+                                autoFocus
+                                ref={(input) => {
+                                    if (input) {
+                                        input.focus();
+                                        input.setSelectionRange(0, 0);
+                                    }
+                                }}
+                                onChange={(e) => {
+                                    if (game) {
+                                        game.text.text = e.target.value;
+                                    }
+                                }}
+                                onBlur={() => {
+                                    if (game) {
+                                        game.sendText();
+                                        game.text.text = '';
+                                        game.text.x = 0;
+                                        game.text.y = 0;
+                                    }
+                                }}
+                            />
+                        </div>
+                    )
+            }
             <Menu game={game!}/>
+            
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
             <canvas className="" ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
@@ -148,5 +192,4 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             )} */}
         </div>
     );
-}
- 
+} 
