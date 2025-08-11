@@ -90,7 +90,8 @@ wss.on("connection",(ws,request)=>{
             const roomId = parsedData.roomId;
             const message = parsedData.message;
 
-            console.log("Inserting into DB",      {      roomId:Number(roomId),
+            console.log("Inserting into DB",      {  
+            roomId:Number(roomId),
             message:message,
             userId:userAuthenticated})
             let shape = null
@@ -239,15 +240,17 @@ wss.on("connection",(ws,request)=>{
                     ...parsedData?.shape,
                     strokeWidth: parsedData?.strokeWidth
                 }
+
+                let mes = {  type: "update_shape_stroke_width",
+                id: parsedData.id,
+                shape: updatedShape,
+                roomId: parsedData.roomId,
+                sentBy: parsedData.sentBy}
+
+                console.log("mes ", mes)
                 users.forEach(user => { 
                     if (user.room.includes(parsedData.roomId) && parsedData.sentBy !== user.userId){
-                        user.ws.send(JSON.stringify({
-                            type: "update_shape_stroke_width",
-                            id: parsedData.id,
-                            shape: updatedShape,
-                            roomId: parsedData.roomId,
-                            sentBy: parsedData.sentBy
-                        }))
+                        user.ws.send(JSON.stringify(mes))
                     }
                 })
 
@@ -267,6 +270,48 @@ wss.on("connection",(ws,request)=>{
                     console.log("Could not update shape")
                     console.log(err)
                 }
+            }
+            else if(parsedData.type === "text"){
+                console.log("text message received", parsedData)
+                const roomId = parsedData.roomId;
+                const message = parsedData.message;
+                const userId = parsedData.sentBy;
+                const textShape = {
+                    shape: {
+                        type: "text",
+                        x: parsedData.x,
+                        y: parsedData.y,
+                        text: parsedData.text
+                    }
+                }
+                try{
+                    console.log("textShape ", textShape)
+                    const dbShape = await prismaClient.chat.create({
+                        data:{
+                            roomId:Number(roomId),
+                            message:JSON.stringify(textShape),
+                            userId:userAuthenticated
+                        }
+                    })
+
+                    users.forEach(user => {
+                        if (user.room.includes(roomId)){
+                            user.ws.send(JSON.stringify({
+                                type:"text",
+                                x: parsedData.x,
+                                y: parsedData.y,
+                                text: parsedData.text,
+                                id:dbShape?.id,
+                                roomId:roomId
+                            }))
+                        }
+                    })
+                }catch(err){
+                    console.log(err)
+                }
+
+
+
             }
     })
 
