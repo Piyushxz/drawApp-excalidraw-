@@ -147,6 +147,9 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                             <input 
                                 type="text" 
                                 className="text-2xl focus:outline-none w-full h-full bg-transparent border-none " 
+                                style={{
+                                    fontFamily: 'Virgil, sans-serif'
+                                }}
                                 autoFocus
                                 ref={(input) => {
                                     if (input) {

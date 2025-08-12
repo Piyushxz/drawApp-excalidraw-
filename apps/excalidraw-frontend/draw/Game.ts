@@ -431,13 +431,13 @@ export class Game {
             return isPointNearPencilPath(x, y, shape.points);
         }
         else if (shape.type === "text") {
-            // // For text, check if point is within the text bounds
-            // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-            // const textMetrics = this.ctx.measureText(shape.text);
-            // const textWidth = shape.width || textMetrics.width;
-            // const textHeight = shape.height || shape.fontSize;
-            // return x >= shape.x && x <= shape.x + textWidth &&
-            //        y >= shape.y - textHeight && y <= shape.y;
+            // For text, check if point is within the text bounds
+            this.ctx.font = '24px Virgil, sans-serif';
+            const textMetrics = this.ctx.measureText(shape.text);
+            const textWidth = textMetrics.width;
+            const textHeight = 24;
+            return x >= shape.x && x <= shape.x + textWidth &&
+                   y >= shape.y && y <= shape.y + textHeight;
         }
         return false;
     }
@@ -621,8 +621,9 @@ export class Game {
             }
             else if (shape.type === "text") {
                 // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-                console.log(shape, 696969)
-                this.ctx.font = '24px sans-serif'
+                this.ctx.font = '24px Virgil, sans-serif'
+                // Adjust Y position to account for text baseline
+                this.ctx.textBaseline = 'top'
                 this.ctx.fillText(shape.text,shape.x,shape.y)   
             }
             
@@ -675,6 +676,17 @@ export class Game {
                     } else {
                         return; // Skip if no points
                     }
+                } else if (shape.type === "text") {
+                    // For text shapes, calculate bounds based on text metrics
+                    this.ctx.font = '24px Virgil, sans-serif';
+                    const textMetrics = this.ctx.measureText(shape.text);
+                    const textWidth = textMetrics.width;
+                    const textHeight = 24;
+                    const padding = 5;
+                    minX = shape.x - padding;
+                    minY = shape.y - padding;
+                    maxX = shape.x + textWidth + padding;
+                    maxY = shape.y + textHeight + padding;
                 } else {
                     return; // Skip if shape type is not handled
                 }
@@ -762,13 +774,10 @@ export class Game {
                         }
                         break;
                     case "text":
-                        // this.dragOffset = {
-                        //     x: transformedCoords.x - shapeVal.shape.x,
-                        //     y: transformedCoords.y - shapeVal.shape.y
-                        // };
-                        this.text.x = transformedCoords.x
-                        this.text.y = transformedCoords.y
-                        console.log(this.text,99)
+                        this.dragOffset = {
+                            x: transformedCoords.x - shapeVal.shape.x,
+                            y: transformedCoords.y - shapeVal.shape.y
+                        };
                         break;
                 }
 
@@ -968,7 +977,9 @@ export class Game {
                 
         
             }
-            
+            else if(this.selectedTool === 'text'){
+                return;
+            }
         }
 
 
@@ -1036,6 +1047,10 @@ export class Game {
                             }));
                         }
                     }
+                    break;
+                case "text":
+                    this.clickedShape.shape.x = transformedCoords.x - this.dragOffset.x;
+                    this.clickedShape.shape.y = transformedCoords.y - this.dragOffset.y;
                     break;
             }
             this.updateCursor(); // Update cursor during dragging
