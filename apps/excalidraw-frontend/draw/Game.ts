@@ -11,7 +11,7 @@ export interface shapeArrayType{
     id:number,
     shape:Shape,
     color?:string,
-    strokeWidth?:number
+    strokeWidth?:number,
 }
 export interface Point {
     x:number,
@@ -34,6 +34,8 @@ interface Text{
     text:string,
     x:number,
     y:number,
+    fontSize:number,
+    fontFamily:string
 
 }
 export type Shape = {
@@ -46,7 +48,6 @@ export type Shape = {
     type: "circle";
     centerX: number;
     centerY: number;
-    // Support ellipse like Excalidraw
     radiusX?: number;
     radiusY?: number;
     // Backward compatibility for older shapes
@@ -85,6 +86,8 @@ export type Shape = {
     x: number;
     y: number;
     text: string;
+    fontSize:number,
+    fontFamily:string
 }
 
 
@@ -110,7 +113,9 @@ export class Game {
     private setSelectedTool : Dispatch<SetStateAction<Tool>>;
     private session:Session
     private isDarkTheme: boolean = true; // Default to dark theme
-    public text:Text = {text:"",x:0,y:0}
+    public text:Text = {text:"",x:0,y:0,fontSize:24,fontFamily:"Virgil"}
+    public currentFont: string = "Virgil"; // Default font
+    public fontSize: number = 24;
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
 
@@ -152,6 +157,27 @@ export class Game {
         this.clearCanvas();
     }
 
+    public setFont(fontType: 'handwriting' | 'code' | 'normal') {
+        switch (fontType) {
+            case 'handwriting':
+                this.currentFont = 'Virgil';
+                break;
+            case 'code':
+                this.currentFont = 'Comic Sans MS';
+                break;
+            case 'normal':
+                this.currentFont = 'Satoshi';
+                break;
+            default:
+                this.currentFont = 'Virgil';
+        }
+        this.clearCanvas();
+    }
+    public setFontSize(fontSize: number) {
+        this.fontSize = fontSize;
+        this.clearCanvas();
+    }
+
     // Transform screen coordinates to canvas coordinates
     private screenToCanvas(screenX: number, screenY: number): Point {
         const scale = this.zoom / 100;
@@ -183,7 +209,32 @@ export class Game {
             shape:shape,
             color:color,
             roomId:this.roomId,
-            sentBy : this.session.accessToken
+            sentBy : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
+        }))
+    }
+
+    public updateText(id:number,fontSize:number,fontFamily:string){
+        let shape = this.existingShapes.find(shapeItem => shapeItem.id === id) ;
+        if(shape && shape.shape.type === 'text'){
+            const textShape = shape.shape as {
+                type: 'text';
+                x: number;
+                y: number;
+                text: string;
+                fontSize: number;
+                fontFamily: string;
+            };
+            textShape.fontSize = fontSize;
+            textShape.fontFamily = fontFamily;
+            console.log("shape",shape)
+        }
+        this.clearCanvas();
+        this.socket.send(JSON.stringify({
+            type:"update_shape_text",
+            id:id,
+            shape:shape,
+            roomId:this.roomId,
+            sentBy : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
     }
     
@@ -201,7 +252,7 @@ export class Game {
             shape:shape,
             strokeWidth:strokeWidth,
             roomId:this.roomId,
-            sentBy : this.session.accessToken
+            sentBy : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
     }
 
@@ -385,8 +436,10 @@ export class Game {
             text:this.text.text,
             x:this.text.x,
             y:this.text.y,
+            fontSize:this.fontSize,
+            fontFamily:this.currentFont,
             roomId:this.roomId,
-            sentBy : this.session.accessToken
+            sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
     }
     
@@ -431,11 +484,11 @@ export class Game {
             return isPointNearPencilPath(x, y, shape.points);
         }
         else if (shape.type === "text") {
-            // For text, check if point is within the text bounds
-            this.ctx.font = '24px Virgil, sans-serif';
+            const scaledFontSize = (shape.fontSize * this.zoom) / 100;
+            this.ctx.font = `${scaledFontSize}px ${shape.fontFamily}, sans-serif`;
             const textMetrics = this.ctx.measureText(shape.text);
             const textWidth = textMetrics.width;
-            const textHeight = 24;
+            const textHeight = scaledFontSize;
             return x >= shape.x && x <= shape.x + textWidth &&
                    y >= shape.y && y <= shape.y + textHeight;
         }
@@ -462,7 +515,7 @@ export class Game {
                 type:"delete_shape",
                 shape:this.clickedShapeIndex,
                 roomId:this.roomId,
-                sentBy : this.session.accessToken
+                sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
             }
         )
 
@@ -479,7 +532,16 @@ export class Game {
                 const id = JSON.parse(message.id)
                 const parsedShape = JSON.parse(message.message)
                 console.log("parsedSHape",parsedShape)
-                this.existingShapes.push({shape:parsedShape.shape,id})
+                const newShape = {shape:parsedShape.shape,id}
+                this.existingShapes.push(newShape)
+                
+                // Auto-select the newly created shape if it was created by the current user
+                if (message.sentBy === this.session?.accessToken) {
+                    this.clickedShape = newShape;
+                    this.clickedShapeIndex = id;
+                    this.prevShape = JSON.parse(JSON.stringify(newShape));
+                }
+                
                 this.clearCanvas();
             }
 
@@ -538,20 +600,52 @@ export class Game {
             }
             else if(message.type === 'text'){
                 console.log("text message received", message);
-                const id = message.id; // Don't parse, it's already a number
+                const id = message.id; 
                 const textShape: Shape = {
                     type: 'text',
                     x: message.x,
                     y: message.y,
-                    text: message.text
+                    text: message.text,
+                    fontSize:message.fontSize,
+                    fontFamily:message.fontFamily
                 };
-                this.existingShapes.push({shape: textShape, id});
+                const newTextShape = {shape: textShape, id};
+                this.existingShapes.push(newTextShape);
+                
+                // Auto-select the newly created text if it was created by the current user
+                if (message.sentBy === this.session?.accessToken) {
+                    this.clickedShape = newTextShape;
+                    this.clickedShapeIndex = id;
+                    this.prevShape = JSON.parse(JSON.stringify(newTextShape));
+                }
+                
                 this.clearCanvas();
             }
+            else if(message.type === 'update_shape_text'){
+                console.log("update_shape_text received", message);
+                const id = message.id;
+                
+                // Find the existing shape and update it instead of creating a new one
+                let shapeIndex = this.existingShapes.findIndex(shape => shape.id === id);
+                
+                if (shapeIndex !== -1) {
+                    // Update existing shape
+                    const textShape: Shape = {
+                        type: 'text',
+                        x: message.shape.shape.x,
+                        y: message.shape.shape.y,
+                        text: message.shape.shape.text,
+                        fontSize: message.shape.shape.fontSize,
+                        fontFamily: message.shape.shape.fontFamily
+                    };
+                    this.existingShapes[shapeIndex].shape = textShape;
+                } 
+                this.clearCanvas();
+        }
         }
     }
 
-     clearCanvas() {
+    public clearCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = this.isDarkTheme ? "rgba(0, 0, 0, 1)" : "rgba(255, 255, 255, 1)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -620,11 +714,12 @@ export class Game {
                 }
             }
             else if (shape.type === "text") {
-                // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-                this.ctx.font = '24px Virgil, sans-serif'
+                // Scale font size based on zoom level
+                const scaledFontSize = (shape.fontSize * this.zoom) / 100;
+                this.ctx.font = `${scaledFontSize}px ${shape.fontFamily}, sans-serif`
                 // Adjust Y position to account for text baseline
                 this.ctx.textBaseline = 'top'
-                this.ctx.fillText(shape.text,shape.x,shape.y)   
+                this.ctx.fillText(shape.text, shape.x, shape.y)   
             }
             
             
@@ -677,11 +772,12 @@ export class Game {
                         return; // Skip if no points
                     }
                 } else if (shape.type === "text") {
-                    // For text shapes, calculate bounds based on text metrics
-                    this.ctx.font = '24px Virgil, sans-serif';
+                    // For text shapes, calculate bounds based on text metrics with zoom scaling
+                    const scaledFontSize = (shape.fontSize * this.zoom) / 100;
+                    this.ctx.font = `${scaledFontSize}px ${shape.fontFamily}, sans-serif`;
                     const textMetrics = this.ctx.measureText(shape.text);
                     const textWidth = textMetrics.width;
-                    const textHeight = 24;
+                    const textHeight = scaledFontSize;
                     const padding = 5;
                     minX = shape.x - padding;
                     minY = shape.y - padding;
@@ -815,7 +911,7 @@ export class Game {
                        shape:this.clickedShape
                   }),
                   roomId: this.roomId,
-                  sentBy : this.session.accessToken
+                  sentBy : this.session?.accessToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
                }))
         }
         
@@ -911,6 +1007,8 @@ export class Game {
             }),
             roomId: this.roomId
          }))
+         
+
          this.setSelectedTool('mouse')
 
 

@@ -37,6 +37,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         
     }, [selectedTool]);
 
+    console.log("session", session)
     useEffect(() => {
         if (canvasRef.current ) {
             const g = new Game(canvasRef.current, roomId, socket, setSelectedTool, session, theme);
@@ -140,15 +141,16 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                         <div 
                             className="absolute w-[100px] h-[30px] z-[9999]" 
                             style={{
-                                top: `${game?.text.y}px`,
-                                left: `${game?.text.x}px`
+                                top: `${(game?.text.y || 0) * (zoom / 100) + panOffset.y}px`,
+                                left: `${(game?.text.x || 0) * (zoom / 100) + panOffset.x}px`
                             }}
                         >
                             <input 
                                 type="text" 
-                                className="text-2xl focus:outline-none w-full h-full bg-transparent border-none " 
+                                className="text-2xl focus:outline-none min-w-auto h-full bg-transparent border-none " 
                                 style={{
-                                    fontFamily: 'Virgil, sans-serif'
+                                    fontFamily: 'Virgil, sans-serif',
+                                    fontSize: `${(game?.fontSize || 24) * (zoom / 100)}px`
                                 }}
                                 autoFocus
                                 ref={(input) => {

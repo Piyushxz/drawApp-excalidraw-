@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { SessionStrategy } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {prismaClient} from "@repo/db/client"
 import {JWT_SECRET} from "@repo/backend-common/config"
@@ -33,6 +33,13 @@ export const authOptions = {
             }
         })
     ],
+    session: {
+        strategy: "jwt" as SessionStrategy,
+        maxAge: 3 * 24 * 60 * 60,
+      },
+      jwt: {
+        maxAge: 3 * 24 * 60 * 60,
+      },
     
     pages: {
         signIn: "/signin"
