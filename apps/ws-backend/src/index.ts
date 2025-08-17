@@ -281,7 +281,9 @@ wss.on("connection",(ws,request)=>{
                         type: "text",
                         x: parsedData.x,
                         y: parsedData.y,
-                        text: parsedData.text
+                        text: parsedData.text,
+                        fontSize:parsedData.fontSize,
+                        fontFamily:parsedData.fontFamily
                     }
                 }
                 try{
@@ -301,6 +303,8 @@ wss.on("connection",(ws,request)=>{
                                 x: parsedData.x,
                                 y: parsedData.y,
                                 text: parsedData.text,
+                                fontSize:parsedData.fontSize,
+                                fontFamily:parsedData.fontFamily,
                                 id:dbShape?.id,
                                 roomId:roomId
                             }))
@@ -313,6 +317,43 @@ wss.on("connection",(ws,request)=>{
 
 
             }
+            else if(parsedData.type === "update_shape_text"){
+                console.log("update_shape_text", parsedData)
+                const roomId = parsedData.roomId;
+                const message = parsedData.message;
+                const userId = parsedData.sentBy;
+                console.log("parsedData 6969",parsedData)
+
+                users.forEach(user => {
+                    if (user.room.includes(roomId) ){
+                        user.ws.send(JSON.stringify({
+                            type:"update_shape_text",
+                            id:parsedData.id,
+                            shape:parsedData.shape,
+                            roomId:roomId,
+                            sentBy:parsedData.sentBy
+                }))
+                    }
+                })
+                console.log("parsedData.shape",parsedData.shape)
+                try{
+                    await prismaClient.chat.update({
+                        data:{
+                            message:JSON.stringify(parsedData.shape.shape)
+                        },
+                        where:{
+                            id:parsedData.id,
+                            roomId:Number(parsedData.roomId)
+                        }
+                    })
+                }
+                catch(err){
+                    console.log("Could not update shape")
+                    console.log(err)
+                }
+                console.log("shape updated succesfully")
+            }
+            
     })
 
 
