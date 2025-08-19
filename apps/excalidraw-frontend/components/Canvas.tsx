@@ -172,6 +172,16 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                                         game.text.y = 0;
                                     }
                                 }}
+                                onKeyDown={(e)=>{
+                                    if(e.key === "Enter"){
+                                        if (game) {
+                                            game.sendText();
+                                            game.text.text = '';
+                                            game.text.x = 0;
+                                            game.text.y = 0;
+                                        }
+                                    }
+                                }}
                             />
                         </div>
                     )
@@ -179,7 +189,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             <Menu game={game!}/>
             
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
-            <canvas className="" ref={canvasRef}></canvas>
+            <canvas className="z-[9999]" ref={canvasRef}></canvas>
             <PanningOptionBar zoom={zoom} onZoomChange={setZoom} />
             <ShapeConfigModal 
                 game={game} 

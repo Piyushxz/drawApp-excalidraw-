@@ -119,6 +119,11 @@ export class Game {
     private isDragging = false;
     private dragOffset = { x: 0, y: 0 };
 
+    // Resize state
+    private isResizing = false;
+    private resizeHandle: string = '';
+    private resizeStartData = { width: 0, height: 0, x: 0, y: 0 };
+
     // Zoom and pan state
     private zoom: number = 100;
     private panOffset: Point = { x: 0, y: 0 };
@@ -254,6 +259,55 @@ export class Game {
             roomId:this.roomId,
             sentBy : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
+    }
+
+    // Helper method to draw selection box and resize handles
+    private drawSelectionBox() {
+        if (!this.clickedShape) return;
+        
+        const bounds = this.getSelectionBoxBounds();
+        if (!bounds) return;
+        
+        const width = bounds.maxX - bounds.minX;
+        const height = bounds.maxY - bounds.minY;
+        
+        // Draw selection box (dashed border)
+        this.ctx.strokeStyle = "#0096FF";
+        this.ctx.lineWidth = 1;
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.strokeRect(bounds.minX, bounds.minY, width, height);
+        this.ctx.setLineDash([]);
+        
+        // Draw resize handles
+        this.drawResizeHandles(bounds.minX, bounds.minY, width, height);
+    }
+
+    // Helper method to draw resize handles
+    private drawResizeHandles(x: number, y: number, width: number, height: number) {
+        const handleSize = 6; // Smaller handles like Excalidraw
+        const handleColor = "#0096FF";
+        const handleFillColor = "#ffffff";
+        const handleOffset = 2;
+        
+        this.ctx.fillStyle = handleFillColor;
+        this.ctx.strokeStyle = handleColor;
+        this.ctx.lineWidth = 1.5;
+        
+        // Corner handles only (4 handles)
+        const handles = [
+            { x: x - handleOffset, y: y - handleOffset }, // nw
+            { x: x + width - handleSize + handleOffset, y: y - handleOffset }, // ne
+            { x: x + width - handleSize + handleOffset, y: y + height - handleSize + handleOffset }, // se
+            { x: x - handleOffset, y: y + height - handleSize + handleOffset } // sw
+        ];
+        
+        handles.forEach(handle => {
+            // Draw handle with rounded corners (like Excalidraw)
+            this.ctx.beginPath();
+            this.ctx.roundRect(handle.x, handle.y, handleSize, handleSize, 2);
+            this.ctx.fill();
+            this.ctx.stroke();
+        });
     }
 
     // Helper method to draw rounded rectangle
@@ -393,14 +447,139 @@ export class Game {
         this.updateCursor();
     }
 
+    // Method to get selection box bounds
+    private getSelectionBoxBounds(): { minX: number; minY: number; maxX: number; maxY: number } | null {
+        if (!this.clickedShape) return null;
+        
+        const shape = this.clickedShape.shape;
+        const padding = 8;
+        
+        if (shape.type === "rect") {
+            const actualX = shape.width < 0 ? shape.x + shape.width : shape.x;
+            const actualY = shape.height < 0 ? shape.y + shape.height : shape.y;
+            const actualWidth = Math.abs(shape.width);
+            const actualHeight = Math.abs(shape.height);
+            
+            return {
+                minX: actualX - padding,
+                minY: actualY - padding,
+                maxX: actualX + actualWidth + padding,
+                maxY: actualY + actualHeight + padding
+            };
+        } else if (shape.type === "circle") {
+            const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
+            const ry = Math.abs(shape.radiusY ?? shape.radius ?? 0);
+            
+            return {
+                minX: shape.centerX - rx - padding,
+                minY: shape.centerY - ry - padding,
+                maxX: shape.centerX + rx + padding,
+                maxY: shape.centerY + ry + padding
+            };
+        } else if (shape.type === "diamond") {
+            return {
+                minX: Math.min(shape.x1, shape.x2, shape.x3, shape.x4) - padding,
+                minY: Math.min(shape.y1, shape.y2, shape.y3, shape.y4) - padding,
+                maxX: Math.max(shape.x1, shape.x2, shape.x3, shape.x4) + padding,
+                maxY: Math.max(shape.y1, shape.y2, shape.y3, shape.y4) + padding
+            };
+        } else if (shape.type === "line" || shape.type === "arrow") {
+            return {
+                minX: Math.min(shape.x1, shape.x2) - padding,
+                minY: Math.min(shape.y1, shape.y2) - padding,
+                maxX: Math.max(shape.x1, shape.x2) + padding,
+                maxY: Math.max(shape.y1, shape.y2) + padding
+            };
+        } else if (shape.type === "pencil") {
+            if (shape.points.length > 0) {
+                return {
+                    minX: Math.min(...shape.points.map(p => p.x)) - padding,
+                    minY: Math.min(...shape.points.map(p => p.y)) - padding,
+                    maxX: Math.max(...shape.points.map(p => p.x)) + padding,
+                    maxY: Math.max(...shape.points.map(p => p.y)) + padding
+                };
+            }
+        } else if (shape.type === "text") {
+            // Use actual font size for bounding box calculation to keep it consistent with zoom
+            this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}, sans-serif`;
+            const textMetrics = this.ctx.measureText(shape.text);
+            const textWidth = textMetrics.width;
+            const textHeight = shape.fontSize;
+            
+            return {
+                minX: shape.x - padding,
+                minY: shape.y - padding,
+                maxX: shape.x + textWidth + padding,
+                maxY: shape.y + textHeight + padding
+            };
+        }
+        
+        return null;
+    }
+
+    // Method to get resize handle at a point
+    private getResizeHandle(x: number, y: number): string {
+        if (!this.clickedShape) return '';
+        
+        const bounds = this.getSelectionBoxBounds();
+        if (!bounds) return '';
+        
+        const handleSize = 6; // Smaller handles like Excalidraw
+        const handleOffset = 2; // Slight offset from selection box
+        
+        // Check corners only (4 handles)
+        if (x >= bounds.maxX - handleSize - handleOffset && x <= bounds.maxX + handleOffset && 
+            y >= bounds.maxY - handleSize - handleOffset && y <= bounds.maxY + handleOffset) return 'se';
+        if (x >= bounds.minX - handleOffset && x <= bounds.minX + handleSize + handleOffset && 
+            y >= bounds.maxY - handleSize - handleOffset && y <= bounds.maxY + handleOffset) return 'sw';
+        if (x >= bounds.maxX - handleSize - handleOffset && x <= bounds.maxX + handleOffset && 
+            y >= bounds.minY - handleOffset && y <= bounds.minY + handleSize + handleOffset) return 'ne';
+        if (x >= bounds.minX - handleOffset && x <= bounds.minX + handleSize + handleOffset && 
+            y >= bounds.minY - handleOffset && y <= bounds.minY + handleSize + handleOffset) return 'nw';
+        
+        return '';
+    }
+
     // Method to update cursor based on selected tool
     private updateCursor() {
         if (!this.canvas) return;
+        
+        // If resizing, show resize cursor
+        if (this.isResizing) {
+            this.canvas.style.cursor = "nw-resize";
+            return;
+        }
         
         // If dragging, show grabbing cursor
         if (this.isDragging && this.selectedTool === 'mouse') {
             this.canvas.style.cursor = "grabbing";
             return;
+        }
+        
+        // Check for resize handles if mouse tool is selected and shape is selected
+        if (this.selectedTool === 'mouse' && this.clickedShape) {
+            const handle = this.getResizeHandle(this.currentMouseX, this.currentMouseY);
+            if (handle) {
+                switch (handle) {
+                    case 'nw':
+                    case 'se':
+                        this.canvas.style.cursor = "nw-resize";
+                        break;
+                    case 'ne':
+                    case 'sw':
+                        this.canvas.style.cursor = "ne-resize";
+                        break;
+                    case 'n':
+                    case 's':
+                        this.canvas.style.cursor = "ns-resize";
+                        break;
+                    case 'e':
+                    case 'w':
+                        this.canvas.style.cursor = "ew-resize";
+                        break;
+                }
+                return;
+            }
         }
         
         switch (this.selectedTool) {
@@ -441,6 +620,9 @@ export class Game {
             roomId:this.roomId,
             sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
+
+        this.clearCanvas();
+        this.setSelectedTool('mouse')
     }
     
     // Method to clear shape selection
@@ -484,11 +666,12 @@ export class Game {
             return isPointNearPencilPath(x, y, shape.points);
         }
         else if (shape.type === "text") {
-            const scaledFontSize = (shape.fontSize * this.zoom) / 100;
-            this.ctx.font = `${scaledFontSize}px ${shape.fontFamily}, sans-serif`;
+            // For text, check if point is within the text bounds
+   
+            this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}, sans-serif`;
             const textMetrics = this.ctx.measureText(shape.text);
             const textWidth = textMetrics.width;
-            const textHeight = scaledFontSize;
+            const textHeight = shape.fontSize;
             return x >= shape.x && x <= shape.x + textWidth &&
                    y >= shape.y && y <= shape.y + textHeight;
         }
@@ -662,7 +845,7 @@ export class Game {
             this.ctx.lineWidth = strokeWidth ? strokeWidth : 2; // Reset line width
             this.ctx.fillStyle = color ? color : (this.isDarkTheme ? "#ffffff" : "#000000"); // For text fill
             
-            if (shape.type === "rect") {
+            if (shape?.type === "rect") {
                 this.drawRoundedRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "circle") {
                 const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
@@ -673,7 +856,7 @@ export class Game {
                     this.ctx.stroke();
                     this.ctx.closePath();
                 }
-            } else if (shape.type === "diamond") {
+            } else if (shape?.type === "diamond") {
                 this.ctx.beginPath();
                 this.ctx.moveTo(shape.x1, shape.y1);
                 this.ctx.lineTo(shape.x2, shape.y2);
@@ -681,12 +864,12 @@ export class Game {
                 this.ctx.lineTo(shape.x4, shape.y4);
                 this.ctx.closePath();
                 this.ctx.stroke();
-            } else if (shape.type === "line") {
+            } else if (shape?.type === "line") {
                 this.ctx.beginPath();
                 this.ctx.moveTo(shape.x1, shape.y1);
                 this.ctx.lineTo(shape.x2, shape.y2);
                 this.ctx.stroke();
-            } else if (shape.type === "arrow") {
+            } else if (shape?.type === "arrow") {
                 const headlen = 14;
                 const angle = Math.atan2(shape.y2 - shape.y1, shape.x2 - shape.x1);
                 this.ctx.beginPath();
@@ -702,7 +885,7 @@ export class Game {
                 this.ctx.lineTo(arrowX2, arrowY2);
                 this.ctx.stroke();
             }
-            else if (shape.type === "pencil") {
+            else if (shape?.type === "pencil") {
                 console.log("rendering pencil", shape);
             
                 for (let i = 0; i < shape.points.length - 1; i++) {
@@ -713,86 +896,22 @@ export class Game {
                     this.ctx.stroke();
                 }
             }
-            else if (shape.type === "text") {
-                // Scale font size based on zoom level
-                const scaledFontSize = (shape.fontSize * this.zoom) / 100;
-                this.ctx.font = `${scaledFontSize}px ${shape.fontFamily}, sans-serif`
+            else if (shape?.type === "text") {
+                // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
+                this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}, sans-serif`
                 // Adjust Y position to account for text baseline
                 this.ctx.textBaseline = 'top'
-                this.ctx.fillText(shape.text, shape.x, shape.y)   
+                this.ctx.fillText(shape.text,shape.x,shape.y)   
             }
             
             
             if (this.clickedShape && this.clickedShape.shape === shape ) {
-                this.ctx.strokeStyle = "#0096FF"; 
-                this.ctx.lineWidth = 2;
-        
-                let minX: number, minY: number, maxX: number, maxY: number;
-                if (shape.type === "rect") {
-                    // Handle negative width/height by calculating actual bounds
-                    const actualX = shape.width < 0 ? shape.x + shape.width : shape.x;
-                    const actualY = shape.height < 0 ? shape.y + shape.height : shape.y;
-                    const actualWidth = Math.abs(shape.width);
-                    const actualHeight = Math.abs(shape.height);
-                    const padding = 5;
-                    minX = actualX - padding;
-                    minY = actualY - padding;
-                    maxX = actualX + actualWidth + padding;
-                    maxY = actualY + actualHeight + padding;
-                } else if (shape.type === "circle") {
-                    const padding = 5;
-                    const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
-                    const ry = Math.abs(shape.radiusY ?? shape.radius ?? 0);
-                    minX = shape.centerX - rx - padding;
-                    minY = shape.centerY - ry - padding;
-                    maxX = shape.centerX + rx + padding;
-                    maxY = shape.centerY + ry + padding;
-                } else if (shape.type === "diamond") {
-                    const padding = 5;
-                    minX = Math.min(shape.x1, shape.x2, shape.x3, shape.x4) - padding;
-                    minY = Math.min(shape.y1, shape.y2, shape.y3, shape.y4) - padding;
-                    maxX = Math.max(shape.x1, shape.x2, shape.x3, shape.x4) + padding;
-                    maxY = Math.max(shape.y1, shape.y2, shape.y3, shape.y4) + padding;
-                } else if (shape.type === "line" || shape.type === "arrow") {
-                    const padding = 5;
-                    minX = Math.min(shape.x1, shape.x2) - padding;
-                    minY = Math.min(shape.y1, shape.y2) - padding;
-                    maxX = Math.max(shape.x1, shape.x2) + padding;
-                    maxY = Math.max(shape.y1, shape.y2) + padding;
-                } else if (shape.type === "pencil") {
-                    // For pencil shapes, calculate bounds from all points
-                    const points = shape.points;
-                    if (points.length > 0) {
-                        const padding = 5;
-                        minX = Math.min(...points.map(p => p.x)) - padding;
-                        minY = Math.min(...points.map(p => p.y)) - padding;
-                        maxX = Math.max(...points.map(p => p.x)) + padding;
-                        maxY = Math.max(...points.map(p => p.y)) + padding;
-                    } else {
-                        return; // Skip if no points
-                    }
-                } else if (shape.type === "text") {
-                    // For text shapes, calculate bounds based on text metrics with zoom scaling
-                    const scaledFontSize = (shape.fontSize * this.zoom) / 100;
-                    this.ctx.font = `${scaledFontSize}px ${shape.fontFamily}, sans-serif`;
-                    const textMetrics = this.ctx.measureText(shape.text);
-                    const textWidth = textMetrics.width;
-                    const textHeight = scaledFontSize;
-                    const padding = 5;
-                    minX = shape.x - padding;
-                    minY = shape.y - padding;
-                    maxX = shape.x + textWidth + padding;
-                    maxY = shape.y + textHeight + padding;
-                } else {
-                    return; // Skip if shape type is not handled
-                }
-        
-                // Draw selection box with consistent styling
-                this.ctx.setLineDash([5, 5]); // Creates a dashed effect
-                this.ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
-                this.ctx.setLineDash([]); // Reset line dash to solid for other drawings
+                // This will be handled by drawSelectionBox() method
             }
         });
+        
+        // Draw selection box and handles after all shapes are rendered
+        this.drawSelectionBox();
         
         // Restore transformations
         this.ctx.restore();
@@ -812,6 +931,60 @@ export class Game {
         }
 
         if (this.selectedTool === "mouse") {
+            // Check for resize handles first
+            if (this.clickedShape) {
+                const handle = this.getResizeHandle(transformedCoords.x, transformedCoords.y);
+                if (handle) {
+                    this.isResizing = true;
+                    this.resizeHandle = handle;
+                    
+                    const shape = this.clickedShape.shape;
+                    if (shape.type === "rect") {
+                        this.resizeStartData = {
+                            width: shape.width,
+                            height: shape.height,
+                            x: shape.x,
+                            y: shape.y
+                        };
+                    } else if (shape.type === "circle") {
+                        const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
+                        const ry = Math.abs(shape.radiusY ?? shape.radius ?? 0);
+                        this.resizeStartData = {
+                            width: rx * 2,
+                            height: ry * 2,
+                            x: shape.centerX - rx,
+                            y: shape.centerY - ry
+                        };
+                    } else if (shape.type === "diamond") {
+                        const minX = Math.min(shape.x1, shape.x2, shape.x3, shape.x4);
+                        const minY = Math.min(shape.y1, shape.y2, shape.y3, shape.y4);
+                        const maxX = Math.max(shape.x1, shape.x2, shape.x3, shape.x4);
+                        const maxY = Math.max(shape.y1, shape.y2, shape.y3, shape.y4);
+                        this.resizeStartData = {
+                            width: maxX - minX,
+                            height: maxY - minY,
+                            x: minX,
+                            y: minY
+                        };
+                    } else if (shape.type === "line" || shape.type === "arrow") {
+                        this.resizeStartData = {
+                            width: shape.x2 - shape.x1,
+                            height: shape.y2 - shape.y1,
+                            x: shape.x1,
+                            y: shape.y1
+                        };
+                    } else if (shape.type === "text") {
+                        this.resizeStartData = {
+                            width: shape.fontSize, // Store fontSize in width
+                            height: shape.fontSize,
+                            x: shape.x,
+                            y: shape.y
+                        };
+                    }
+                    return;
+                }
+            }
+            
             let shapeVal: shapeArrayType | undefined = this.existingShapes.find(({ shape }) =>
                 this.isPointInsideShape(transformedCoords.x, transformedCoords.y, shape)
             );
@@ -897,6 +1070,24 @@ export class Game {
         const width = transformedCoords.x - this.startX;
         const height = transformedCoords.y - this.startY;
         this.isDragging = false
+        
+        // Handle resize completion
+        if (this.isResizing && this.clickedShape) {
+            this.isResizing = false;
+            this.resizeHandle = '';
+            
+            // Send update to server
+            this.socket.send(JSON.stringify({
+                type: "update_shape",
+                message: JSON.stringify({
+                   shape: this.clickedShape
+              }),
+              roomId: this.roomId,
+              sentBy: this.session?.accessToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
+           }));
+            return;
+        }
+        
         const selectedTool = this.selectedTool;
         let shape: Shape | null = null;
         console.log("clicled",JSON.stringify(this.clickedShape),"clicked",JSON.stringify(this.prevShape))
@@ -1081,6 +1272,256 @@ export class Game {
         }
 
 
+        // Handle resizing
+        if (this.isResizing && this.clickedShape && this.clicked && this.selectedTool === 'mouse') {
+            const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
+            const deltaX = transformedCoords.x - this.startX;
+            const deltaY = transformedCoords.y - this.startY;
+            
+            const shape = this.clickedShape.shape;
+            const minSize = 10;
+            
+            if (shape.type === "rect") {
+                const rect = shape;
+                const startWidth = this.resizeStartData.width;
+                const startHeight = this.resizeStartData.height;
+                const startX = this.resizeStartData.x;
+                const startY = this.resizeStartData.y;
+                
+                // Check if Shift is held for aspect ratio
+                const maintainAspectRatio = e.shiftKey;
+                const aspectRatio = startWidth / startHeight;
+                
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                let newX = startX;
+                let newY = startY;
+                
+                switch (this.resizeHandle) {
+                    case 'se': // bottom-right - only right and bottom edges move
+                        newWidth = startWidth + deltaX;
+                        newHeight = startHeight + deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                    case 'sw': // bottom-left - left and bottom edges move
+                        newX = startX + deltaX;
+                        newWidth = startWidth - deltaX;
+                        newHeight = startHeight + deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                    case 'ne': // top-right - right and top edges move
+                        newY = startY + deltaY;
+                        newWidth = startWidth + deltaX;
+                        newHeight = startHeight - deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                    case 'nw': // top-left - left and top edges move
+                        newX = startX + deltaX;
+                        newY = startY + deltaY;
+                        newWidth = startWidth - deltaX;
+                        newHeight = startHeight - deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                }
+                
+                // Apply minimum size constraints
+                if (Math.abs(newWidth) >= minSize && Math.abs(newHeight) >= minSize) {
+                    rect.x = newX;
+                    rect.y = newY;
+                    rect.width = newWidth;
+                    rect.height = newHeight;
+                }
+            } else if (shape.type === "circle") {
+                const circle = shape;
+                const startRadiusX = this.resizeStartData.width / 2;
+                const startRadiusY = this.resizeStartData.height / 2;
+                const startCenterX = this.resizeStartData.x + startRadiusX;
+                const startCenterY = this.resizeStartData.y + startRadiusY;
+                
+                const maintainAspectRatio = e.shiftKey;
+                
+                let newRadiusX = startRadiusX;
+                let newRadiusY = startRadiusY;
+                let newCenterX = startCenterX;
+                let newCenterY = startCenterY;
+                
+                switch (this.resizeHandle) {
+                    case 'se': // bottom-right - keep top-left corner fixed
+                        newRadiusX = startRadiusX + deltaX / 2;
+                        newRadiusY = startRadiusY + deltaY / 2;
+                        // Center moves to keep top-left corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
+                        if (maintainAspectRatio) {
+                            const maxRadius = Math.max(newRadiusX, newRadiusY);
+                            newRadiusX = maxRadius;
+                            newRadiusY = maxRadius;
+                        }
+                        break;
+                    case 'sw': // bottom-left - keep top-right corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newRadiusX = startRadiusX - deltaX / 2;
+                        newRadiusY = startRadiusY + deltaY / 2;
+                        if (maintainAspectRatio) {
+                            const maxRadius = Math.max(Math.abs(newRadiusX), Math.abs(newRadiusY));
+                            newRadiusX = maxRadius;
+                            newRadiusY = maxRadius;
+                        }
+                        break;
+                    case 'ne': // top-right - keep bottom-left corner fixed
+                        newRadiusX = startRadiusX + deltaX / 2;
+                        newRadiusY = startRadiusY - deltaY / 2;
+                        // Center moves to keep bottom-left corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
+                        if (maintainAspectRatio) {
+                            const maxRadius = Math.max(Math.abs(newRadiusX), Math.abs(newRadiusY));
+                            newRadiusX = maxRadius;
+                            newRadiusY = maxRadius;
+                        }
+                        break;
+                    case 'nw': // top-left - keep bottom-right corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
+                        newRadiusX = startRadiusX - deltaX / 2;
+                        newRadiusY = startRadiusY - deltaY / 2;
+                        if (maintainAspectRatio) {
+                            const maxRadius = Math.max(Math.abs(newRadiusX), Math.abs(newRadiusY));
+                            newRadiusX = maxRadius;
+                            newRadiusY = maxRadius;
+                        }
+                        break;
+                }
+                
+                if (Math.abs(newRadiusX) >= minSize / 2 && Math.abs(newRadiusY) >= minSize / 2) {
+                    circle.centerX = newCenterX;
+                    circle.centerY = newCenterY;
+                    circle.radiusX = Math.abs(newRadiusX);
+                    circle.radiusY = Math.abs(newRadiusY);
+                }
+            } else if (shape.type === "diamond") {
+                const diamond = shape;
+                const startWidth = this.resizeStartData.width;
+                const startHeight = this.resizeStartData.height;
+                const startCenterX = this.resizeStartData.x + startWidth / 2;
+                const startCenterY = this.resizeStartData.y + startHeight / 2;
+                
+                const maintainAspectRatio = e.shiftKey;
+                const aspectRatio = startWidth / startHeight;
+                
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                
+                switch (this.resizeHandle) {
+                    case 'se': // bottom-right - only right and bottom edges move
+                        newWidth = startWidth + deltaX;
+                        newHeight = startHeight + deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                    case 'sw': // bottom-left - left and bottom edges move
+                        newWidth = startWidth - deltaX;
+                        newHeight = startHeight + deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                    case 'ne': // top-right - right and top edges move
+                        newWidth = startWidth + deltaX;
+                        newHeight = startHeight - deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                    case 'nw': // top-left - left and top edges move
+                        newWidth = startWidth - deltaX;
+                        newHeight = startHeight - deltaY;
+                        if (maintainAspectRatio) {
+                            newHeight = newWidth / aspectRatio;
+                        }
+                        break;
+                }
+                
+                if (Math.abs(newWidth) >= minSize && Math.abs(newHeight) >= minSize) {
+                    const halfWidth = newWidth / 2;
+                    const halfHeight = newHeight / 2;
+                    
+                    diamond.x1 = startCenterX; // top
+                    diamond.y1 = startCenterY - halfHeight;
+                    diamond.x2 = startCenterX + halfWidth; // right
+                    diamond.y2 = startCenterY;
+                    diamond.x3 = startCenterX; // bottom
+                    diamond.y3 = startCenterY + halfHeight;
+                    diamond.x4 = startCenterX - halfWidth; // left
+                    diamond.y4 = startCenterY;
+                }
+            } else if (shape.type === "line" || shape.type === "arrow") {
+                const line = shape;
+                const startX1 = this.resizeStartData.x;
+                const startY1 = this.resizeStartData.y;
+                const startX2 = startX1 + this.resizeStartData.width;
+                const startY2 = startY1 + this.resizeStartData.height;
+                
+                switch (this.resizeHandle) {
+                    case 'se': // end point
+                        line.x2 = startX2 + deltaX;
+                        line.y2 = startY2 + deltaY;
+                        break;
+                    case 'nw': // start point
+                        line.x1 = startX1 + deltaX;
+                        line.y1 = startY1 + deltaY;
+                        break;
+                    case 'ne': // end point (x), start point (y)
+                        line.x2 = startX2 + deltaX;
+                        line.y1 = startY1 + deltaY;
+                        break;
+                    case 'sw': // start point (x), end point (y)
+                        line.x1 = startX1 + deltaX;
+                        line.y2 = startY2 + deltaY;
+                        break;
+                }
+            } else if (shape.type === "text") {
+                const text = shape;
+                const startFontSize = this.resizeStartData.width; // Using width to store fontSize
+                const startX = this.resizeStartData.x;
+                const startY = this.resizeStartData.y;
+                
+                // For text, we'll use the larger of deltaX or deltaY to determine size change
+                const sizeChange = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+                
+                switch (this.resizeHandle) {
+                    case 'se': // bottom-right - increase font size, keep left edge fixed
+                        const newFontSizeSE = Math.max(8, startFontSize + sizeChange);
+                        text.fontSize = newFontSizeSE;
+                        break;
+                    case 'sw': // bottom-left - increase font size, keep left edge fixed
+                        const newFontSizeSW = Math.max(8, startFontSize + sizeChange);
+                        text.fontSize = newFontSizeSW;
+                        break;
+                    case 'ne': // top-right - increase font size, keep left edge fixed
+                        const newFontSizeNE = Math.max(8, startFontSize + sizeChange);
+                        text.fontSize = newFontSizeNE;
+                        break;
+                    case 'nw': // top-left - increase font size, keep left edge fixed
+                        const newFontSizeNW = Math.max(8, startFontSize + sizeChange);
+                        text.fontSize = newFontSizeNW;
+                        break;
+                }
+            }
+            
+            this.clearCanvas();
+            return;
+        }
+        
         if (this.isDragging && this.clickedShape && this.clicked && this.selectedTool === 'mouse') {
             const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
             switch (this.clickedShape.shape.type) {
