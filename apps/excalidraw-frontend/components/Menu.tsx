@@ -5,7 +5,8 @@ import { DropdownMenuItem, DropdownMenuSeparator } from "@radix-ui/react-dropdow
 import { useRouter } from "next/navigation"
 import { useTheme } from "@/contexts/ThemeContext"
 import { Game } from "@/draw/Game"
-export const Menu = ({game}:{game:Game})=>{
+import { Dispatch, SetStateAction } from "react"
+export const Menu = ({game,setShowClearCanvasModal}:{game:Game,setShowClearCanvasModal:Dispatch<SetStateAction<boolean>>})=>{
     const router = useRouter()
     const {theme,toggleTheme,setSystemTheme} = useTheme()
 
@@ -61,7 +62,9 @@ export const Menu = ({game}:{game:Game})=>{
                     <Users className="size-5 text-inherit"/>
                     <span className=" font-normal text-md  tracking-tighter text-inherit ">Live Collaboration</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem onClick={()=>{
+                    setShowClearCanvasModal(true)
+                }}
                  className="w-full flex gap-2 w-full items-center  rounded-sm px-3 py-1.5 text-md outline-none text-white hover:text-red-600 transition-colors  hover:bg-gray-800 rounded-lg transition-all ease-in-out cursor-pointer">
                             <Trash2 className="size-5 text-inherit"/>
                             <span className="font-primary font-normal text-md tracking-tighter text-inherit ">Clear Canvas</span>

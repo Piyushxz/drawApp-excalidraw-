@@ -10,6 +10,7 @@ import { Session } from "next-auth";
 import { ShapeConfigModal } from "./ShapeConfigModal";
 import { Menu } from "./Menu";
 import { useTheme } from "@/contexts/ThemeContext";
+import { ClearCanvasModal } from "./ClearCanvasModal";
 
 
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
@@ -21,23 +22,18 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [showShapeConfigModal, setShowShapeConfigModal] = useState(false);
     const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
     const [showTextInput, setShowTextInput] = useState(false);
-
-    // Theme state
-    const [isDark, setIsDark] = useState(theme === 'dark'); // Default to dark mode
+    const [showClearCanvasModal, setShowClearCanvasModal] = useState(false);
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
     const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
 
-    // Tutorial state
-    const [showTutorial, setShowTutorial] = useState(false);
 
     useEffect(() => {
         game?.setTool(selectedTool);
         
     }, [selectedTool]);
 
-    console.log("session", session)
     useEffect(() => {
         if (canvasRef.current ) {
             const g = new Game(canvasRef.current, roomId, socket, setSelectedTool, session, theme);
@@ -49,15 +45,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         }
     }, [canvasRef]);
 
-    // Show tutorial when canvas mounts
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            console.log("Showing tutorial...");
-            setShowTutorial(true);
-        }, 1000); // Increased delay
 
-        return () => clearTimeout(timer);
-    }, []);
 
     // Update game with zoom and pan state
     useEffect(() => {
@@ -186,7 +174,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                         </div>
                     )
             }
-            <Menu game={game!}/>
+            <Menu game={game!} setShowClearCanvasModal={setShowClearCanvasModal} />
             
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
             <canvas className="z-[9999]" ref={canvasRef}></canvas>
@@ -198,13 +186,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                 showShapeConfigModal={showShapeConfigModal}
                 setShowShapeConfigModal={setShowShapeConfigModal}
             />
-
-            
-            {/* {showTutorial && (
-                <div className="z-[9999]">
-                    <MultiStepComponent onClose={() => setShowTutorial(false)} />
-                </div>
-            )} */}
+            { showClearCanvasModal &&  <ClearCanvasModal setShowClearCanvasModal={setShowClearCanvasModal} showClearCanvasModal={showClearCanvasModal}/>}
         </div>
     );
 } 
