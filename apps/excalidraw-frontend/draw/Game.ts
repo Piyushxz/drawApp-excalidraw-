@@ -1419,30 +1419,40 @@ export class Game {
                 
                 let newWidth = startWidth;
                 let newHeight = startHeight;
+                let newCenterX = startCenterX;
+                let newCenterY = startCenterY;
                 
                 switch (this.resizeHandle) {
-                    case 'se': // bottom-right - only right and bottom edges move
+                    case 'se': // bottom-right - keep top-left corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
                         newWidth = startWidth + deltaX;
                         newHeight = startHeight + deltaY;
                         if (maintainAspectRatio) {
                             newHeight = newWidth / aspectRatio;
                         }
                         break;
-                    case 'sw': // bottom-left - left and bottom edges move
+                    case 'sw': // bottom-left - keep top-right corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
                         newWidth = startWidth - deltaX;
                         newHeight = startHeight + deltaY;
                         if (maintainAspectRatio) {
                             newHeight = newWidth / aspectRatio;
                         }
                         break;
-                    case 'ne': // top-right - right and top edges move
+                    case 'ne': // top-right - keep bottom-left corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
                         newWidth = startWidth + deltaX;
                         newHeight = startHeight - deltaY;
                         if (maintainAspectRatio) {
                             newHeight = newWidth / aspectRatio;
                         }
                         break;
-                    case 'nw': // top-left - left and top edges move
+                    case 'nw': // top-left - keep bottom-right corner fixed
+                        newCenterX = startCenterX + deltaX / 2;
+                        newCenterY = startCenterY + deltaY / 2;
                         newWidth = startWidth - deltaX;
                         newHeight = startHeight - deltaY;
                         if (maintainAspectRatio) {
@@ -1455,14 +1465,14 @@ export class Game {
                     const halfWidth = newWidth / 2;
                     const halfHeight = newHeight / 2;
                     
-                    diamond.x1 = startCenterX; // top
-                    diamond.y1 = startCenterY - halfHeight;
-                    diamond.x2 = startCenterX + halfWidth; // right
-                    diamond.y2 = startCenterY;
-                    diamond.x3 = startCenterX; // bottom
-                    diamond.y3 = startCenterY + halfHeight;
-                    diamond.x4 = startCenterX - halfWidth; // left
-                    diamond.y4 = startCenterY;
+                    diamond.x1 = newCenterX; // top
+                    diamond.y1 = newCenterY - halfHeight;
+                    diamond.x2 = newCenterX + halfWidth; // right
+                    diamond.y2 = newCenterY;
+                    diamond.x3 = newCenterX; // bottom
+                    diamond.y3 = newCenterY + halfHeight;
+                    diamond.x4 = newCenterX - halfWidth; // left
+                    diamond.y4 = newCenterY;
                 }
             } else if (shape.type === "line" || shape.type === "arrow") {
                 const line = shape;
@@ -1495,24 +1505,25 @@ export class Game {
                 const startX = this.resizeStartData.x;
                 const startY = this.resizeStartData.y;
                 
-                // For text, we'll use the larger of deltaX or deltaY to determine size change
+                // For text, use the larger of deltaX or deltaY, but respect the direction
                 const sizeChange = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+                const direction = (deltaX > 0 || deltaY > 0) ? 1 : -1;
                 
                 switch (this.resizeHandle) {
-                    case 'se': // bottom-right - increase font size, keep left edge fixed
-                        const newFontSizeSE = Math.max(8, startFontSize + sizeChange);
+                    case 'se': // bottom-right - increase/decrease font size, keep left edge fixed
+                        const newFontSizeSE = Math.max(8, startFontSize + (sizeChange * direction));
                         text.fontSize = newFontSizeSE;
                         break;
-                    case 'sw': // bottom-left - increase font size, keep left edge fixed
-                        const newFontSizeSW = Math.max(8, startFontSize + sizeChange);
+                    case 'sw': // bottom-left - increase/decrease font size, keep right edge fixed
+                        const newFontSizeSW = Math.max(8, startFontSize + (sizeChange * direction));
                         text.fontSize = newFontSizeSW;
                         break;
-                    case 'ne': // top-right - increase font size, keep left edge fixed
-                        const newFontSizeNE = Math.max(8, startFontSize + sizeChange);
+                    case 'ne': // top-right - increase/decrease font size, keep left edge fixed
+                        const newFontSizeNE = Math.max(8, startFontSize + (sizeChange * direction));
                         text.fontSize = newFontSizeNE;
                         break;
-                    case 'nw': // top-left - increase font size, keep left edge fixed
-                        const newFontSizeNW = Math.max(8, startFontSize + sizeChange);
+                    case 'nw': // top-left - increase/decrease font size, keep right edge fixed
+                        const newFontSizeNW = Math.max(8, startFontSize + (sizeChange * direction));
                         text.fontSize = newFontSizeNW;
                         break;
                 }
