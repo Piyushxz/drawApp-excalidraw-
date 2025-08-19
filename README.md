@@ -1,84 +1,113 @@
-# Turborepo starter
+# Slapdash - Collaborative Drawing App
 
-This is an official starter Turborepo.
+A real-time collaborative drawing application built as an Excalidraw clone with advanced features like zooming, panning, and multi-user collaboration.
 
-## Using this example
+## Features
 
-Run the following command:
+- **Real-time Collaboration**: Draw together with multiple users in real-time
+- **Advanced Drawing Tools**: Rectangle, circle, diamond, line, arrow, text, and freehand drawing
+- **Zoom & Pan**: Smooth zooming and panning functionality for detailed work
+- **Shape Selection**: Click to select and modify shapes with resize handles
+- **Color & Stroke Customization**: Change colors and stroke widths for any shape
+- **Dark/Light Theme**: Toggle between themes for comfortable viewing
+- **Responsive Design**: Works seamlessly across different screen sizes
 
-```sh
-npx create-turbo@latest
+## Screenshots
+
+![Drawing Interface with Text and Shapes](./apps/excalidraw-frontend/public/image.png)
+
+![Shape Selection and Configuration](./apps/excalidraw-frontend/public/images2.png)
+
+![Advanced Drawing Tools](./apps/excalidraw-frontend/public/images3.png)
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, TypeScript
+- **Real-time Communication**: WebSockets
+- **Drawing Engine**: HTML5 Canvas API
+- **Backend**: Node.js
+- **Monorepo Management**: Turborepo
+- **Styling**: Tailwind CSS
+- **Authentication**: NextAuth.js
+- **Database**: Prisma with PostgreSQL
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ 
+- pnpm (recommended) or npm
+- PostgreSQL database
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd drawApp(excalidraw)
 ```
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+2. Install dependencies:
+```bash
+pnpm install
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
+3. Set up environment variables:
+```bash
+cp .env.example .env
+# Fill in your database and authentication credentials
 ```
-cd my-turborepo
+
+4. Run database migrations:
+```bash
+pnpm db:migrate
+```
+
+5. Start the development server:
+```bash
 pnpm dev
 ```
 
-### Remote Caching
+The application will be available at `http://localhost:3000`
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## Project Structure
 
 ```
-cd my-turborepo
-npx turbo login
+drawApp(excalidraw)/
+├── apps/
+│   ├── excalidraw-frontend/    # Main drawing application
+│   ├── web/                    # Web interface
+│   ├── http-backend/           # HTTP API server
+│   └── ws-backend/             # WebSocket server
+├── packages/
+│   ├── backend-common/         # Shared backend utilities
+│   ├── common/                 # Shared types and utilities
+│   ├── db/                     # Database schema and migrations
+│   └── ui/                     # Shared UI components
+└── docker/                     # Docker configuration
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Development
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+### Available Scripts
 
-```
-npx turbo link
-```
+- `pnpm dev` - Start all applications in development mode
+- `pnpm build` - Build all applications and packages
+- `pnpm lint` - Run ESLint across all packages
+- `pnpm test` - Run tests across all packages
 
-## Useful Links
+### Key Components
 
-Learn more about the power of Turborepo:
+- **Game.ts**: Core drawing engine with canvas manipulation
+- **Canvas.tsx**: Main canvas component with event handling
+- **ShapeConfigModal.tsx**: Shape property configuration
+- **WebSocket Handlers**: Real-time collaboration logic
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+

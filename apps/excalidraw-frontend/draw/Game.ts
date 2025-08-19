@@ -146,7 +146,7 @@ export class Game {
         // Set initial theme based on parameter
         this.isDarkTheme = initialTheme === 'dark' || (initialTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         
-        this.clearCanvas();
+        this.renderCanvas();
         this.updateCursor(); // Set initial cursor
     }
 
@@ -159,7 +159,7 @@ export class Game {
     // Method to set theme
     public setTheme(theme: 'light' | 'dark' | 'system') {
         this.isDarkTheme = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        this.clearCanvas();
+        this.renderCanvas();
     }
 
     public setFont(fontType: 'handwriting' | 'code' | 'normal') {
@@ -176,11 +176,11 @@ export class Game {
             default:
                 this.currentFont = 'Virgil';
         }
-        this.clearCanvas();
+        this.renderCanvas();
     }
     public setFontSize(fontSize: number) {
         this.fontSize = fontSize;
-        this.clearCanvas();
+        this.renderCanvas();
     }
 
     // Transform screen coordinates to canvas coordinates
@@ -207,7 +207,7 @@ export class Game {
             shape.color = color;
             console.log("shape",shape)
         }
-        this.clearCanvas();
+        this.renderCanvas();
         this.socket.send(JSON.stringify({
             type:"update_shape_color",
             id:id,
@@ -233,7 +233,7 @@ export class Game {
             textShape.fontFamily = fontFamily;
             console.log("shape",shape)
         }
-        this.clearCanvas();
+        this.renderCanvas();
         this.socket.send(JSON.stringify({
             type:"update_shape_text",
             id:id,
@@ -250,7 +250,7 @@ export class Game {
             shape.strokeWidth = strokeWidth;
             console.log("shape",shape)
         }
-        this.clearCanvas();
+        this.renderCanvas();
         this.socket.send(JSON.stringify({
             type:"update_shape_stroke_width",
             id:id,
@@ -621,7 +621,7 @@ export class Game {
             sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
 
-        this.clearCanvas();
+        this.renderCanvas();
         this.setSelectedTool('mouse')
     }
     
@@ -629,7 +629,7 @@ export class Game {
     clearSelection() {
         this.clickedShape = undefined;
         this.clickedShapeIndex = -1;
-        this.clearCanvas();
+        this.renderCanvas();
     }
     isPointInsideShape(x: number, y: number, shape: Shape): boolean {
 
@@ -682,7 +682,7 @@ export class Game {
         this.existingShapes = await getExisitingShapes(this.roomId);
         console.log("shapes",this.existingShapes);
 
-        this.clearCanvas();
+        this.renderCanvas();
     }
 
        deleteShape(){
@@ -725,7 +725,7 @@ export class Game {
                     this.prevShape = JSON.parse(JSON.stringify(newShape));
                 }
                 
-                this.clearCanvas();
+                this.renderCanvas();
             }
 
             else if(message.type=='delete_shape'){
@@ -738,7 +738,7 @@ export class Game {
             // else if(message.type === 'local_delete_shape' ){
             //     this.clickedShapeIndex = JSON.parse(message.id)
             //     this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
-            //     this.clearCanvas()
+            //     this.renderCanvas()
             // }
             else if(message.type === 'update_shape'){
                 const token = message.sentBy
@@ -761,14 +761,14 @@ export class Game {
                     this.existingShapes.push({ id: message.shape.id, shape: message.shape.shape });
                 }
 
-                this.clearCanvas()
+                this.renderCanvas()
             }
             else if(message.type === 'update_shape_color'){
                 console.log("update_shape_color received 69", message);
                 let shapeIndex = this.existingShapes.findIndex(shape => shape.id === message.id);
                 if (shapeIndex !== -1) {
                     this.existingShapes[shapeIndex].color = message.color;
-                    this.clearCanvas();
+                    this.renderCanvas();
                 }
             }
             else if(message.type === 'update_shape_stroke_width'){
@@ -778,7 +778,7 @@ export class Game {
                     let shape = this.existingShapes[shapeIndex].shape
 
                     this.existingShapes[shapeIndex].strokeWidth =message.shape?.strokeWidth;
-                    this.clearCanvas();
+                    this.renderCanvas();
                 }
             }
             else if(message.type === 'text'){
@@ -802,7 +802,7 @@ export class Game {
                     this.prevShape = JSON.parse(JSON.stringify(newTextShape));
                 }
                 
-                this.clearCanvas();
+                this.renderCanvas();
             }
             else if(message.type === 'update_shape_text'){
                 console.log("update_shape_text received", message);
@@ -823,12 +823,12 @@ export class Game {
                     };
                     this.existingShapes[shapeIndex].shape = textShape;
                 } 
-                this.clearCanvas();
+                this.renderCanvas();
         }
         }
     }
 
-    public clearCanvas() {
+    public renderCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = this.isDarkTheme ? "rgba(0, 0, 0, 1)" : "rgba(255, 255, 255, 1)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1051,14 +1051,14 @@ export class Game {
                 }
 
                 console.log("text",this.text)
-                this.clearCanvas(); 
+                this.renderCanvas(); 
                 this.updateCursor(); // Update cursor when dragging starts
 
             }
             else{
                 this.clickedShape = undefined;
                 this.clickedShapeIndex = -1;
-                this.clearCanvas();
+                this.renderCanvas();
             }
 
         }
@@ -1213,7 +1213,7 @@ export class Game {
             const width = transformedCoords.x - this.startX;
             const height = transformedCoords.y - this.startY;
 
-            this.clearCanvas();
+            this.renderCanvas();
             this.drawPreview();
             // Handle pencil path updates
             if(this.selectedTool === 'pencil'){
@@ -1529,7 +1529,7 @@ export class Game {
                 }
             }
             
-            this.clearCanvas();
+            this.renderCanvas();
             return;
         }
         

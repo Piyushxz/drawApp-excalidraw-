@@ -51,7 +51,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     useEffect(() => {
         if (game) {
             game.updateTransform(zoom, panOffset);
-            game.clearCanvas();
+            game.renderCanvas();
         }
     }, [zoom, panOffset, game]);
 

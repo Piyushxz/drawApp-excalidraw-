@@ -65,7 +65,7 @@ export const ShapeConfigModal = (props: ShapeConfigModalProps) => {
                     animate={{ x: 0 }}
                     exit={{ x: -300 }}
                     transition={{ duration: 0.2, ease: [0.19, 1, 0.22, 1] }}
-                    className="absolute left-4 font-satoshi  top-36 -translate-y-1/2 w-64 h-auto bg-[#191919] border border-gray-300/10 rounded-lg shadow-lg z-[100] p-4"
+                    className="absolute left-4 font-satoshi  top-36 -translate-y-1/2 w-64 h-auto bg-[#191919] border border-gray-300/10 rounded-lg shadow-lg z-[9998] p-4"
                 >
                     <div className="flex flex-col gap-3 justify-between mb-3">
                         <p className="text-white text-sm capitalize font-bold">{props.shape?.shape.type}</p>
