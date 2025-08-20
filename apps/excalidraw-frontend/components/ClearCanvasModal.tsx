@@ -1,12 +1,15 @@
 import { AlertDialogContent,AlertDialog,AlertDialogTrigger ,AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "./AlertDialog";
 import { Dispatch, SetStateAction, useEffect } from "react";
+import { Game } from "../draw/Game";
 
-export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal}:{setShowClearCanvasModal:Dispatch<SetStateAction<boolean>>,showClearCanvasModal:boolean}) => {
+export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal,game}:{setShowClearCanvasModal:Dispatch<SetStateAction<boolean>>,showClearCanvasModal:boolean,game:Game}) => {
     console.log("showClearCanvasModal",showClearCanvasModal)
     
-    const handleClose = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+    const handleClose = (e?: React.MouseEvent) => {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
         setShowClearCanvasModal(false);
         
     };
@@ -20,11 +23,12 @@ export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal}:
     
     return (
     <AlertDialog open={showClearCanvasModal} onOpenChange={(open) => {
-    }}>
+    }} >
     <AlertDialogContent 
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         onMouseUp={(e) => e.stopPropagation()}
+        className="tracking-tight bg-gray-100 dark:bg-black border-gray-200 dark:bg-[#191919] dark:border-white/15 "
     >
         <AlertDialogHeader>
         <AlertDialogTitle>Clear Canvas</AlertDialogTitle>
@@ -34,7 +38,10 @@ export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal}:
         </AlertDialogHeader>
         <AlertDialogFooter>
         <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
-        <AlertDialogAction onClick={handleClose}>Continue</AlertDialogAction>
+        <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={()=>{
+            game?.clearCanvas();
+            handleClose();
+        }}>Continue</AlertDialogAction>
         </AlertDialogFooter>
     </AlertDialogContent>
     </AlertDialog>

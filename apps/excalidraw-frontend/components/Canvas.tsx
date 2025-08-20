@@ -23,6 +23,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [shapeSelectionState, setShapeSelectionState] = useState({ index: -1, shape: undefined as any });
     const [showTextInput, setShowTextInput] = useState(false);
     const [showClearCanvasModal, setShowClearCanvasModal] = useState(false);
+    const [canvasUpdateTrigger, setCanvasUpdateTrigger] = useState(0); // Force re-render when canvas updates
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
@@ -36,7 +37,10 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
 
     useEffect(() => {
         if (canvasRef.current ) {
-            const g = new Game(canvasRef.current, roomId, socket, setSelectedTool, session, theme);
+            const g = new Game(canvasRef.current, roomId, socket, setSelectedTool, session, theme, () => {
+                // Callback when canvas is updated
+                setCanvasUpdateTrigger(prev => prev + 1);
+            });
             setGame(g);
 
             return () => {
@@ -71,44 +75,36 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
 
 
 
-    // Poll for shape selection changes since Game class doesn't trigger React re-renders
+    // Update shape selection state when canvas updates
     useEffect(() => {
         if (!game) return;
         
-        const interval = setInterval(() => {
-            const currentIndex = game.clickedShapeIndex;
-            const currentShape = game.clickedShape;
-            
-            if (currentIndex !== shapeSelectionState.index || currentShape !== shapeSelectionState.shape) {
-                console.log("Shape selection changed via polling:", currentIndex, currentShape);
-                setShapeSelectionState({ index: currentIndex, shape: currentShape });
-                
-                if (currentIndex !== undefined && currentIndex !== -1) {
-                    setShowShapeConfigModal(true);
-                } else {
-                    setShowShapeConfigModal(false);
-                }
-            }
-        }, 100); // Check every 100ms
+        const currentIndex = game.clickedShapeIndex;
+        const currentShape = game.clickedShape;
         
-        return () => clearInterval(interval);
-    }, [game, shapeSelectionState.index, shapeSelectionState.shape]);
+        if (currentIndex !== shapeSelectionState.index || currentShape !== shapeSelectionState.shape) {
+            console.log("Shape selection changed:", currentIndex, currentShape);
+            setShapeSelectionState({ index: currentIndex, shape: currentShape });
+            
+            if (currentIndex !== undefined && currentIndex !== -1) {
+                setShowShapeConfigModal(true);
+            } else {
+                setShowShapeConfigModal(false);
+            }
+        }
+    }, [canvasUpdateTrigger, game, shapeSelectionState.index, shapeSelectionState.shape]);
 
-    // Poll for text input state changes
+    // Update text input state when canvas updates
     useEffect(() => {
         if (!game) return;
         
-        const interval = setInterval(() => {
-            const shouldShowTextInput = game.selectedTool === "text" && game.text.x !== 0 && game.text.y !== 0;
-            
-            if (shouldShowTextInput !== showTextInput) {
-                console.log("Text input state changed:", shouldShowTextInput);
-                setShowTextInput(shouldShowTextInput);
-            }
-        }, 100); // Check every 100ms
+        const shouldShowTextInput = game.selectedTool === "text" && game.text.x !== 0 && game.text.y !== 0;
         
-        return () => clearInterval(interval);
-    }, [game, showTextInput]);
+        if (shouldShowTextInput !== showTextInput) {
+            console.log("Text input state changed:", shouldShowTextInput);
+            setShowTextInput(shouldShowTextInput);
+        }
+    }, [canvasUpdateTrigger, game, showTextInput]);
 
     // Hook to manage zoom and pan functionality
     useZoomPan({
@@ -185,8 +181,9 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                 shape={shapeSelectionState.shape}
                 showShapeConfigModal={showShapeConfigModal}
                 setShowShapeConfigModal={setShowShapeConfigModal}
+                canvasUpdateTrigger={canvasUpdateTrigger}
             />
-            { showClearCanvasModal &&  <ClearCanvasModal setShowClearCanvasModal={setShowClearCanvasModal} showClearCanvasModal={showClearCanvasModal}/>}
+            { showClearCanvasModal &&  <ClearCanvasModal game={game!} setShowClearCanvasModal={setShowClearCanvasModal} showClearCanvasModal={showClearCanvasModal}/>}
         </div>
     );
 } 

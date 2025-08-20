@@ -55,7 +55,7 @@ export const FAQS = () => {
                 scaleY: openIndex === index ? 1.06 : 1,
                 opacity: 1,
               }}
-              exit={{ scaleY: 0.95, opacity: 0.8 }}
+              exit={{ scaleY: 0.95, opacity: 0.8 }}  
               transition={{
                 type: "spring",
                 stiffness: 500, 

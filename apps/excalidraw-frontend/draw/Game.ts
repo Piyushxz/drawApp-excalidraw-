@@ -129,8 +129,9 @@ export class Game {
     private panOffset: Point = { x: 0, y: 0 };
 
     socket: WebSocket;
+    private onCanvasUpdate?: () => void; // Callback for canvas updates
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, setSelectedTool: Dispatch<SetStateAction<Tool>>, session: Session, initialTheme: 'light' | 'dark' | 'system' = 'dark') {
+    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, setSelectedTool: Dispatch<SetStateAction<Tool>>, session: Session, initialTheme: 'light' | 'dark' | 'system' = 'dark', onCanvasUpdate?: () => void) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.existingShapes = [];
@@ -142,6 +143,7 @@ export class Game {
         this.initMouseHandlers();
         this.setSelectedTool = setSelectedTool;
         this.session = session;
+        this.onCanvasUpdate = onCanvasUpdate;
         
         // Set initial theme based on parameter
         this.isDarkTheme = initialTheme === 'dark' || (initialTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -160,6 +162,13 @@ export class Game {
     public setTheme(theme: 'light' | 'dark' | 'system') {
         this.isDarkTheme = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         this.renderCanvas();
+    }
+
+    // Method to manually trigger canvas update notification
+    public notifyCanvasUpdate() {
+        if (this.onCanvasUpdate) {
+            this.onCanvasUpdate();
+        }
     }
 
     public setFont(fontType: 'handwriting' | 'code' | 'normal') {
@@ -208,6 +217,7 @@ export class Game {
             console.log("shape",shape)
         }
         this.renderCanvas();
+        this.notifyCanvasUpdate(); // Ensure immediate UI update
         this.socket.send(JSON.stringify({
             type:"update_shape_color",
             id:id,
@@ -234,6 +244,7 @@ export class Game {
             console.log("shape",shape)
         }
         this.renderCanvas();
+        this.notifyCanvasUpdate(); // Ensure immediate UI update
         this.socket.send(JSON.stringify({
             type:"update_shape_text",
             id:id,
@@ -251,6 +262,7 @@ export class Game {
             console.log("shape",shape)
         }
         this.renderCanvas();
+        this.notifyCanvasUpdate(); // Ensure immediate UI update
         this.socket.send(JSON.stringify({
             type:"update_shape_stroke_width",
             id:id,
@@ -625,6 +637,18 @@ export class Game {
         this.setSelectedTool('mouse')
     }
     
+    public clearCanvas(){
+        this.existingShapes = [];
+        this.renderCanvas();
+        this.clickedShape = undefined;
+        this.clickedShapeIndex = -1;
+        this.prevShape = undefined;
+        this.socket.send(JSON.stringify({
+            type:"clear_canvas",
+            roomId:this.roomId,
+            sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
+        }))
+    }
     // Method to clear shape selection
     clearSelection() {
         this.clickedShape = undefined;
@@ -825,13 +849,25 @@ export class Game {
                 } 
                 this.renderCanvas();
         }
+        else if(message.type === 'clear_canvas'){
+            this.existingShapes = [];
+            this.clickedShape = undefined;
+            this.clickedShapeIndex = -1;
+            this.prevShape = undefined;
+            this.renderCanvas();
+        }
         }
     }
 
     public renderCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = this.isDarkTheme ? "rgba(0, 0, 0, 1)" : "rgba(255, 255, 255, 1)";
+        this.ctx.fillStyle = this.isDarkTheme ? "rgba(18,18,18,255)" : "rgba(255, 255, 255, 1)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Notify parent component that canvas has been updated
+        if (this.onCanvasUpdate) {
+            this.onCanvasUpdate();
+        }
 
         // Apply transformations
         this.ctx.save();
