@@ -1,9 +1,9 @@
+"use client"
 import { AlertDialogContent,AlertDialog,AlertDialogTrigger ,AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "./AlertDialog";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { Game } from "../draw/Game";
 
 export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal,game}:{setShowClearCanvasModal:Dispatch<SetStateAction<boolean>>,showClearCanvasModal:boolean,game:Game}) => {
-    console.log("showClearCanvasModal",showClearCanvasModal)
     
     const handleClose = (e?: React.MouseEvent) => {
         if (e) {

@@ -353,6 +353,29 @@ wss.on("connection",(ws,request)=>{
                 }
                 console.log("shape updated succesfully")
             }
+            else if(parsedData.type === "clear_canvas"){
+                console.log("clear_canvas", parsedData)
+                users.forEach(user => {
+                    if (user.room.includes(parsedData.roomId)){
+                        user.ws.send(JSON.stringify({
+                            type:"clear_canvas",
+                            roomId:parsedData.roomId,
+                            sentBy:parsedData.sentBy
+                        }))
+                    }
+                })
+                try{
+                    await prismaClient.chat.deleteMany({
+                        where:{
+                            roomId:Number(parsedData.roomId)
+                        }
+                    })
+                }
+                catch(err){
+                    console.log("Could not clear canvas")
+                    console.log(err)
+                }
+            }
             
     })
 

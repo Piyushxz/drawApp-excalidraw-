@@ -6,7 +6,7 @@ A real-time collaborative drawing application built as an Excalidraw clone with 
 
 - **Real-time Collaboration**: Draw together with multiple users in real-time
 - **Advanced Drawing Tools**: Rectangle, circle, diamond, line, arrow, text, and freehand drawing
-- **Zoom & Pan**: Smooth zooming and panning functionality for detailed work
+- **Zoom & Pan**: Smooth Infinite zooming and panning functionality for detailed work
 - **Shape Selection**: Click to select and modify shapes with resize handles
 - **Color & Stroke Customization**: Change colors and stroke widths for any shape
 - **Dark/Light Theme**: Toggle between themes for comfortable viewing

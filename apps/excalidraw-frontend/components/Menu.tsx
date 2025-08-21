@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "@/contexts/ThemeContext"
 import { Game } from "@/draw/Game"
 import { Dispatch, SetStateAction } from "react"
-export const Menu = ({game,setShowClearCanvasModal}:{game:Game,setShowClearCanvasModal:Dispatch<SetStateAction<boolean>>})=>{
+export const Menu = ({game,setShowClearCanvasModal,setShowLiveCollaborationModal}:{game:Game,setShowClearCanvasModal:Dispatch<SetStateAction<boolean>>,setShowLiveCollaborationModal:Dispatch<SetStateAction<boolean>>})=>{
     const router = useRouter()
     const {theme,toggleTheme,setSystemTheme} = useTheme()
 
@@ -58,7 +58,9 @@ export const Menu = ({game,setShowClearCanvasModal}:{game:Game,setShowClearCanva
                     <HomeIcon className="size-5 text-inherit"/>
                     <span className=" font-normal text-md  tracking-tighter text-inherit ">Home</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="w-full flex items-center gap-2 w-full  rounded-sm px-3 py-1.5 text-md outline-none text-white  transition-colors  hover:bg-gray-800 rounded-lg transition-all ease-in-out cursor-pointer">
+                <DropdownMenuItem onClick={()=>{
+                    setShowLiveCollaborationModal(true)
+                }} className="w-full flex items-center gap-2 w-full  rounded-sm px-3 py-1.5 text-md outline-none text-white  transition-colors  hover:bg-gray-800 rounded-lg transition-all ease-in-out cursor-pointer">
                     <Users className="size-5 text-inherit"/>
                     <span className=" font-normal text-md  tracking-tighter text-inherit ">Live Collaboration</span>
                 </DropdownMenuItem>

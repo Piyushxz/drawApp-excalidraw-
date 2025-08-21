@@ -11,6 +11,7 @@ import { ShapeConfigModal } from "./ShapeConfigModal";
 import { Menu } from "./Menu";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ClearCanvasModal } from "./ClearCanvasModal";
+import { LiveCollaborationModal } from "./LiveCollaboration";
 
 
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
@@ -24,6 +25,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [showTextInput, setShowTextInput] = useState(false);
     const [showClearCanvasModal, setShowClearCanvasModal] = useState(false);
     const [canvasUpdateTrigger, setCanvasUpdateTrigger] = useState(0); // Force re-render when canvas updates
+    const [showLiveCollaborationModal, setShowLiveCollaborationModal] = useState(false);
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
@@ -170,7 +172,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                         </div>
                     )
             }
-            <Menu game={game!} setShowClearCanvasModal={setShowClearCanvasModal} />
+            <Menu game={game!} setShowLiveCollaborationModal={setShowLiveCollaborationModal} setShowClearCanvasModal={setShowClearCanvasModal} />
             
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
             <canvas className="z-[9999]" ref={canvasRef}></canvas>
@@ -184,6 +186,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                 canvasUpdateTrigger={canvasUpdateTrigger}
             />
             { showClearCanvasModal &&  <ClearCanvasModal game={game!} setShowClearCanvasModal={setShowClearCanvasModal} showClearCanvasModal={showClearCanvasModal}/>}
+            { showLiveCollaborationModal &&  <LiveCollaborationModal game={game!} setShowLiveCollaborationModal={setShowLiveCollaborationModal} showLiveCollaborationModal={showLiveCollaborationModal}/>}
         </div>
     );
 } 
