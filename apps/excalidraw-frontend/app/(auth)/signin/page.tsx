@@ -43,6 +43,7 @@ export default function Login() {
         } catch (error) {
             toast.dismiss(loadId);
             toast.error("Something went wrong. Try again.");
+            console.log(error)
         } finally {
             setLoading(false);
         }

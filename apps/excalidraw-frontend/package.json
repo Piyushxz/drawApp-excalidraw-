@@ -34,11 +34,11 @@
     "recoil": "^0.7.7",
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.3.1",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "@repo/backend-common": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@repo/backend-common": "workspace:*",
     "@repo/common": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/ui": "workspace:*",

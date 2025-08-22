@@ -23,7 +23,7 @@ export default function SignupPage() {
         const loadId = toast.loading("Signing Up...")
 
         try{
-            const response = await axios.post('http://localhost:3008/signup',{
+            await axios.post('http://localhost:3008/signup',{
                 username,
                 email,
                 password
@@ -36,6 +36,7 @@ export default function SignupPage() {
             setUsername('')
             router.push('/signin')
         }catch(err){
+            console.log(err)
             toast.error("Could Not sign up")
         }
         finally{

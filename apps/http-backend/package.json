@@ -17,10 +17,10 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "@repo/backend-common": "workspace:*"
   },
   "devDependencies": {
-    "@repo/backend-common": "workspace:*",
     "@repo/common": "workspace:*",
     "@repo/typescript-config": "workspace:*"
   },
