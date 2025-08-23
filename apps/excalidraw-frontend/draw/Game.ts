@@ -452,7 +452,8 @@ export class Game {
 
     setTool(tool: Tool) {
         this.selectedTool = tool;
-        if(this.selectedTool !== 'arrow'){
+        // Only clear selection when switching away from mouse tool, not when switching to it
+        if(this.selectedTool !== 'arrow' && this.selectedTool !== 'mouse'){
             this.clickedShape = undefined;
             this.clickedShapeIndex = -1;
         }
@@ -622,6 +623,17 @@ export class Game {
     }
 
     public sendText(){
+        // Create text shape locally and auto-select it
+        const textShape: Shape = {
+            type: 'text',
+            x: this.text.x,
+            y: this.text.y,
+            text: this.text.text,
+            fontSize: this.fontSize,
+            fontFamily: this.currentFont
+        };
+        this.createShapeLocally(textShape);
+
         this.socket.send(JSON.stringify({
             type:"text",
             text:this.text.text,
@@ -633,8 +645,27 @@ export class Game {
             sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
         }))
 
-        this.renderCanvas();
         this.setSelectedTool('mouse')
+    }
+
+    // Method to create shape locally and auto-select it
+    private createShapeLocally(shape: Shape) {
+        // Generate a temporary ID for local shape
+        const tempId = Date.now() + Math.random();
+        const newShape = { shape, id: tempId };
+        
+        // Add to existing shapes
+        this.existingShapes.push(newShape);
+        
+        // Auto-select the shape
+        this.clickedShape = newShape;
+        this.clickedShapeIndex = tempId;
+        this.prevShape = JSON.parse(JSON.stringify(newShape));
+        
+        console.log("Created shape locally with temp ID:", tempId, "shape:", shape);
+        
+        // Render the canvas
+        this.renderCanvas();
     }
     
     public clearCanvas(){
@@ -740,13 +771,27 @@ export class Game {
                 const parsedShape = JSON.parse(message.message)
                 console.log("parsedSHape",parsedShape)
                 const newShape = {shape:parsedShape.shape,id}
-                this.existingShapes.push(newShape)
                 
-                // Auto-select the newly created shape if it was created by the current user
-                if (message.sentBy === this.session?.accessToken) {
-                    this.clickedShape = newShape;
-                    this.clickedShapeIndex = id;
-                    this.prevShape = JSON.parse(JSON.stringify(newShape));
+                // Check if we already have this shape locally (by comparing shape data)
+                const existingShapeIndex = this.existingShapes.findIndex(existing => 
+                    JSON.stringify(existing.shape) === JSON.stringify(parsedShape.shape)
+                );
+                
+                if (existingShapeIndex !== -1) {
+                    // Update the existing shape with the real ID from server
+                    const existingShape = this.existingShapes[existingShapeIndex];
+                    const oldId = existingShape.id;
+                    existingShape.id = id;
+                    
+                    // If this shape was selected locally, update the selection to use the real ID
+                    if (this.clickedShape && this.clickedShapeIndex === oldId) {
+                        this.clickedShape = existingShape;
+                        this.clickedShapeIndex = id;
+                        console.log("Updated selection from temp ID", oldId, "to real ID", id);
+                    }
+                } else {
+                    // This is a shape from another user, add it
+                    this.existingShapes.push(newShape);
                 }
                 
                 this.renderCanvas();
@@ -817,13 +862,32 @@ export class Game {
                     fontFamily:message.fontFamily
                 };
                 const newTextShape = {shape: textShape, id};
-                this.existingShapes.push(newTextShape);
                 
-                // Auto-select the newly created text if it was created by the current user
-                if (message.sentBy === this.session?.accessToken) {
-                    this.clickedShape = newTextShape;
-                    this.clickedShapeIndex = id;
-                    this.prevShape = JSON.parse(JSON.stringify(newTextShape));
+                // Check if we already have this text shape locally (by comparing text data)
+                const existingShapeIndex = this.existingShapes.findIndex(existing => 
+                    existing.shape.type === 'text' &&
+                    existing.shape.x === message.x &&
+                    existing.shape.y === message.y &&
+                    existing.shape.text === message.text &&
+                    existing.shape.fontSize === message.fontSize &&
+                    existing.shape.fontFamily === message.fontFamily
+                );
+                
+                if (existingShapeIndex !== -1) {
+                    // Update the existing shape with the real ID from server
+                    const existingShape = this.existingShapes[existingShapeIndex];
+                    const oldId = existingShape.id;
+                    existingShape.id = id;
+                    
+                    // If this shape was selected locally, update the selection to use the real ID
+                    if (this.clickedShape && this.clickedShapeIndex === oldId) {
+                        this.clickedShape = existingShape;
+                        this.clickedShapeIndex = id;
+                        console.log("Updated text selection from temp ID", oldId, "to real ID", id);
+                    }
+                } else {
+                    // This is a text shape from another user, add it
+                    this.existingShapes.push(newTextShape);
                 }
                 
                 this.renderCanvas();
@@ -874,8 +938,9 @@ export class Game {
         this.ctx.translate(this.panOffset.x, this.panOffset.y);
         this.ctx.scale(this.zoom / 100, this.zoom / 100);
 
-        // Rendering existing shapes
-        this.existingShapes.forEach(({ shape, id ,color,strokeWidth}) => {
+        // Rendering existing shapes with optional chaining
+        this.existingShapes.forEach(({ shape, id, color, strokeWidth }) => {
+            if (!shape || !shape.type || !id) return;
             
             this.ctx.strokeStyle = color ? color : (this.isDarkTheme ? "#ffffff" : "#000000"); // Theme-appropriate default color
             this.ctx.lineWidth = strokeWidth ? strokeWidth : 2; // Reset line width
@@ -883,7 +948,7 @@ export class Game {
             
             if (shape?.type === "rect") {
                 this.drawRoundedRect(shape.x, shape.y, shape.width, shape.height);
-            } else if (shape.type === "circle") {
+            } else if (shape?.type === "circle") {
                 const rx = Math.abs(shape.radiusX ?? shape.radius ?? 0);
                 const ry = Math.abs(shape.radiusY ?? shape.radius ?? 0);
                 if (rx > 0 && ry > 0) {
@@ -920,28 +985,29 @@ export class Game {
                 this.ctx.moveTo(shape.x2, shape.y2);
                 this.ctx.lineTo(arrowX2, arrowY2);
                 this.ctx.stroke();
-            }
-            else if (shape?.type === "pencil") {
+            } else if (shape?.type === "pencil") {
                 console.log("rendering pencil", shape);
             
-                for (let i = 0; i < shape.points.length - 1; i++) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(shape.points[i].x, shape.points[i].y);
-                    this.ctx.lineTo(shape.points[i + 1].x, shape.points[i + 1].y);
-                    this.ctx.lineWidth = strokeWidth ? strokeWidth : 2;
-                    this.ctx.stroke();
+                for (let i = 0; i < (shape.points?.length ?? 0) - 1; i++) {
+                    const currentPoint = shape.points?.[i];
+                    const nextPoint = shape.points?.[i + 1];
+                    
+                    if (currentPoint && nextPoint) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(currentPoint.x, currentPoint.y);
+                        this.ctx.lineTo(nextPoint.x, nextPoint.y);
+                        this.ctx.lineWidth = strokeWidth ? strokeWidth : 2;
+                        this.ctx.stroke();
+                    }
                 }
-            }
-            else if (shape?.type === "text") {
-                // this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}`;
-                this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}, sans-serif`
+            } else if (shape?.type === "text") {
+                this.ctx.font = `${shape.fontSize}px ${shape.fontFamily}, sans-serif`;
                 // Adjust Y position to account for text baseline
-                this.ctx.textBaseline = 'top'
-                this.ctx.fillText(shape.text,shape.x,shape.y)   
+                this.ctx.textBaseline = 'top';
+                this.ctx.fillText(shape.text, shape.x, shape.y);
             }
             
-            
-            if (this.clickedShape && this.clickedShape.shape === shape ) {
+            if (this.clickedShape && this.clickedShape.shape === shape) {
                 // This will be handled by drawSelectionBox() method
             }
         });
@@ -1227,16 +1293,19 @@ export class Game {
         }
         console.log(shape)
 
-          this.socket.send(JSON.stringify({
-              type: "chat",
-              message: JSON.stringify({
-                 shape
-            }),
-            roomId: this.roomId
-         }))
-         
+        // Create shape locally and auto-select it
+        this.createShapeLocally(shape);
 
-         this.setSelectedTool('mouse')
+        // Send shape to server
+        this.socket.send(JSON.stringify({
+            type: "chat",
+            message: JSON.stringify({
+               shape
+          }),
+          roomId: this.roomId
+       }))
+         
+        this.setSelectedTool('mouse')
 
 
     }

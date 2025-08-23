@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { getSession } from "next-auth/react";
 import { Dispatch, SetStateAction, useRef } from "react";
 import { toast } from "sonner";
+import { BACKEND_URL } from "../config";
 
 interface CreateRoomModalProps {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -30,7 +31,7 @@ export const CreateRoomModal = ({ setIsModalOpen }: CreateRoomModalProps) => {
       }
 
       await axios.post(
-        "http://13.235.113.13:3008/createroom",
+        `${BACKEND_URL}/createroom`,
         { roomName },
         {
           headers: {

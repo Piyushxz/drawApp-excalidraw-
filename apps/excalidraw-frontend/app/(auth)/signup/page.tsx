@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormEvent } from "react";
 import { toast } from "sonner";
+import { BACKEND_URL } from "../../../config";
 export default function SignupPage() {
 
     const [username,setUsername] = useState('')
@@ -23,7 +24,7 @@ export default function SignupPage() {
         const loadId = toast.loading("Signing Up...")
 
         try{
-            await axios.post('http://13.235.113.13:3008/signup',{
+            await axios.post(`${BACKEND_URL}/signup`,{
                 username,
                 email,
                 password

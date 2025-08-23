@@ -4,6 +4,7 @@ import { LogIn, Trash2Icon } from "lucide-react";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { BACKEND_URL } from "../config";
 
 export const RoomCard = ({roomName, createdAt,id }: {
     roomName: string,
@@ -19,7 +20,7 @@ export const RoomCard = ({roomName, createdAt,id }: {
         const loadId = toast.loading(`Deleting ${roomName}`)
         try{
             const session = await getSession()
-            const response = await axios.delete('http://13.235.113.13:3008/rooms',{
+            const response = await axios.delete(`${BACKEND_URL}/rooms`,{
                 data:{id}
                 ,
                     headers:{

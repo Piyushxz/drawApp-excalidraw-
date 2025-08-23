@@ -2,7 +2,7 @@
 import axios from "axios"
 import { getSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-
+import { BACKEND_URL } from "../config"
 
 export const useGetRooms =  ()=>{
 
@@ -15,7 +15,7 @@ export const useGetRooms =  ()=>{
             const session = await getSession()
 
 
-            const response = await axios.get("http://13.235.113.13:3008/rooms",{
+            const response = await axios.get(`${BACKEND_URL}/rooms`,{
                 headers:{
                     token: session?.accessToken
                 }

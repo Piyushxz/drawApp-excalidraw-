@@ -4,6 +4,7 @@ import { Circle, Code, Diamond, Eraser, LayoutDashboard, Pencil, PencilIcon, Pen
 import {motion} from "motion/react"
 import { useRouter } from "next/navigation"
 import {uuid} from "@repo/common/types"
+import { BACKEND_URL } from "../config"
 export const Hero = ()=>{
   const shapes = [PencilIcon, Circle, Square, Pentagon, Eraser, Diamond];
   const duplicatedShapes = [...shapes, ...shapes];
@@ -14,7 +15,7 @@ export const Hero = ()=>{
     const handleCreateRandomRoom = async () => {
 
       try{
-        const response = await axios.post('http://13.235.113.13:3008/create-random-room', {
+        const response = await axios.post(`${BACKEND_URL}/create-random-room`, {
           adminId: uuid()
         })
         const roomId = response.data.id;
