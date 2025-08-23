@@ -19,7 +19,7 @@ export const RoomCard = ({roomName, createdAt,id }: {
         const loadId = toast.loading(`Deleting ${roomName}`)
         try{
             const session = await getSession()
-            const response = await axios.delete('http://13.235.113.13:3008/rooms',{
+            const response = await axios.delete('https://13.235.113.13:3008/rooms',{
                 data:{id}
                 ,
                     headers:{
