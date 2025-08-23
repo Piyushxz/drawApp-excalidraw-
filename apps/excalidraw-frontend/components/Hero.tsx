@@ -14,7 +14,7 @@ export const Hero = ()=>{
     const handleCreateRandomRoom = async () => {
 
       try{
-        const response = await axios.post('https://13.235.113.13:3008/create-random-room', {
+        const response = await axios.post('http://13.235.113.13:3008/create-random-room', {
           adminId: uuid()
         })
         const roomId = response.data.id;

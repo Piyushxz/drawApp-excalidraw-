@@ -23,7 +23,7 @@ export default function SignupPage() {
         const loadId = toast.loading("Signing Up...")
 
         try{
-            await axios.post('https://13.235.113.13:3008/signup',{
+            await axios.post('http://13.235.113.13:3008/signup',{
                 username,
                 email,
                 password

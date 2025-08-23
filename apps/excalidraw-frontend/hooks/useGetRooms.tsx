@@ -15,7 +15,7 @@ export const useGetRooms =  ()=>{
             const session = await getSession()
 
 
-            const response = await axios.get("https://13.235.113.13:3008/rooms",{
+            const response = await axios.get("http://13.235.113.13:3008/rooms",{
                 headers:{
                     token: session?.accessToken
                 }
