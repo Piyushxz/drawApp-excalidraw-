@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/
+# /.next/  # Commented out to allow pushing build to repo
 /out/
 
 # production
