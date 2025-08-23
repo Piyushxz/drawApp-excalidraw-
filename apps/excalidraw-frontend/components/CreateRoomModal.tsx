@@ -30,7 +30,7 @@ export const CreateRoomModal = ({ setIsModalOpen }: CreateRoomModalProps) => {
       }
 
       await axios.post(
-        "http://localhost:3008/createroom",
+        "http://13.235.113.13:3008/createroom",
         { roomName },
         {
           headers: {

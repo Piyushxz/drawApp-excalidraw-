@@ -1,2 +1,2 @@
-export const BACKEND_URL ="http://localhost:3008"
-export const WS_URL = "ws://localhost:8080"
+export const BACKEND_URL ="http://13.235.113.13:3008"
+export const WS_URL = "ws://13.235.113.13:8080"
