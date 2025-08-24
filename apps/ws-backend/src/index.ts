@@ -122,7 +122,6 @@ wss.on("connection",(ws,request)=>{
         else if(parsedData.type === "delete_shape"){
             console.log(parsedData)
             try{
-                console.log(`deleting ${parsedData.id}}`)
                 await prismaClient.chat.delete({
                     where:{
                         id:parsedData.shape,
@@ -138,7 +137,7 @@ wss.on("connection",(ws,request)=>{
 
             users.forEach(user => {
                 // &&  parsedData.sentBy!== token
-                if (user.room.includes(parsedData.roomId) &&  parsedData.sentBy!== token){
+                if (user.room.includes(parsedData.roomId) ){
                     user.ws.send(JSON.stringify({
                         type:"delete_shape",
                         id:parsedData.shape,

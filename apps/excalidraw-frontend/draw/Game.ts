@@ -623,17 +623,7 @@ export class Game {
     }
 
     public sendText(){
-        // Create text shape locally and auto-select it
-        const textShape: Shape = {
-            type: 'text',
-            x: this.text.x,
-            y: this.text.y,
-            text: this.text.text,
-            fontSize: this.fontSize,
-            fontFamily: this.currentFont
-        };
-        this.createShapeLocally(textShape);
-
+        // Send text shape to server - it will be added to existingShapes when server confirms
         this.socket.send(JSON.stringify({
             type:"text",
             text:this.text.text,
@@ -648,25 +638,7 @@ export class Game {
         this.setSelectedTool('mouse')
     }
 
-    // Method to create shape locally and auto-select it
-    private createShapeLocally(shape: Shape) {
-        // Generate a temporary ID for local shape
-        const tempId = Date.now() + Math.random();
-        const newShape = { shape, id: tempId };
-        
-        // Add to existing shapes
-        this.existingShapes.push(newShape);
-        
-        // Auto-select the shape
-        this.clickedShape = newShape;
-        this.clickedShapeIndex = tempId;
-        this.prevShape = JSON.parse(JSON.stringify(newShape));
-        
-        console.log("Created shape locally with temp ID:", tempId, "shape:", shape);
-        
-        // Render the canvas
-        this.renderCanvas();
-    }
+
     
     public clearCanvas(){
         this.existingShapes = [];
@@ -746,8 +718,12 @@ export class Game {
             console.error("Error: clickedShapeIndex is undefined.");
             return;
         }
+        
+        // Remove shape locally first
         this.existingShapes = this.existingShapes.filter(({ id }) => id !== this.clickedShapeIndex);
+        this.renderCanvas();
     
+        // Send delete request to server
         this.socket.send(JSON.stringify(
             {
                 type:"delete_shape",
@@ -755,13 +731,14 @@ export class Game {
                 roomId:this.roomId,
                 sentBy :  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0Y2Q4ZWM3LTM1NWUtNGZlYy04YzNiLWIwYzUyYmU1MTFlMCIsImlhdCI6MTc1MzgwNjQ1NH0.bER-qZ5Lvk39mxILYj8O09aIjFeA5x8A1mST4dLyu7I'
             }
-        )
+        ));
 
-        )
-
-
+        // Clear selection after deletion
+        this.clickedShape = undefined;
+        this.clickedShapeIndex = -1;
+        this.prevShape = undefined;
      }
-    initHandlers() {
+     initHandlers() {
         this.socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
 
@@ -771,38 +748,28 @@ export class Game {
                 const parsedShape = JSON.parse(message.message)
                 console.log("parsedSHape",parsedShape)
                 const newShape = {shape:parsedShape.shape,id}
+                this.existingShapes.push(newShape)
                 
-                // Check if we already have this shape locally (by comparing shape data)
-                const existingShapeIndex = this.existingShapes.findIndex(existing => 
-                    JSON.stringify(existing.shape) === JSON.stringify(parsedShape.shape)
-                );
-                
-                if (existingShapeIndex !== -1) {
-                    // Update the existing shape with the real ID from server
-                    const existingShape = this.existingShapes[existingShapeIndex];
-                    const oldId = existingShape.id;
-                    existingShape.id = id;
-                    
-                    // If this shape was selected locally, update the selection to use the real ID
-                    if (this.clickedShape && this.clickedShapeIndex === oldId) {
-                        this.clickedShape = existingShape;
-                        this.clickedShapeIndex = id;
-                        console.log("Updated selection from temp ID", oldId, "to real ID", id);
-                    }
-                } else {
-                    // This is a shape from another user, add it
-                    this.existingShapes.push(newShape);
-                }
+
+                    this.clickedShape = newShape;
+                    this.clickedShapeIndex = id;
+                    this.prevShape = JSON.parse(JSON.stringify(newShape));
+              
                 
                 this.renderCanvas();
             }
 
             else if(message.type=='delete_shape'){
                 console.log("delete shape ", message);
-                const id = JSON.parse(message.id)
+                const shapeDeletedId = JSON.parse(message.id)
 
-                this.clickedShapeIndex = id
-                this.deleteShape()
+                if(this.clickedShapeIndex === shapeDeletedId){
+                    this.clickedShape = undefined;
+                    this.clickedShapeIndex = -1;
+                    this.prevShape = undefined;
+                }
+                this.existingShapes = this.existingShapes.filter(({ id }) => id !== shapeDeletedId);
+                this.renderCanvas()
             }
             // else if(message.type === 'local_delete_shape' ){
             //     this.clickedShapeIndex = JSON.parse(message.id)
@@ -862,32 +829,13 @@ export class Game {
                     fontFamily:message.fontFamily
                 };
                 const newTextShape = {shape: textShape, id};
+                this.existingShapes.push(newTextShape);
                 
-                // Check if we already have this text shape locally (by comparing text data)
-                const existingShapeIndex = this.existingShapes.findIndex(existing => 
-                    existing.shape.type === 'text' &&
-                    existing.shape.x === message.x &&
-                    existing.shape.y === message.y &&
-                    existing.shape.text === message.text &&
-                    existing.shape.fontSize === message.fontSize &&
-                    existing.shape.fontFamily === message.fontFamily
-                );
-                
-                if (existingShapeIndex !== -1) {
-                    // Update the existing shape with the real ID from server
-                    const existingShape = this.existingShapes[existingShapeIndex];
-                    const oldId = existingShape.id;
-                    existingShape.id = id;
-                    
-                    // If this shape was selected locally, update the selection to use the real ID
-                    if (this.clickedShape && this.clickedShapeIndex === oldId) {
-                        this.clickedShape = existingShape;
-                        this.clickedShapeIndex = id;
-                        console.log("Updated text selection from temp ID", oldId, "to real ID", id);
-                    }
-                } else {
-                    // This is a text shape from another user, add it
-                    this.existingShapes.push(newTextShape);
+                // Auto-select the newly created text if it was created by the current user
+                if (message.sentBy === this.session?.accessToken) {
+                    this.clickedShape = newTextShape;
+                    this.clickedShapeIndex = id;
+                    this.prevShape = JSON.parse(JSON.stringify(newTextShape));
                 }
                 
                 this.renderCanvas();
@@ -1293,10 +1241,7 @@ export class Game {
         }
         console.log(shape)
 
-        // Create shape locally and auto-select it
-        this.createShapeLocally(shape);
-
-        // Send shape to server
+        // Send shape to server - it will be added to existingShapes when server confirms
         this.socket.send(JSON.stringify({
             type: "chat",
             message: JSON.stringify({
@@ -1356,7 +1301,6 @@ export class Game {
                     
                     if (shapeVal) {
       
-
                         console.log(shapeVal.id , "del")
                         this.clickedShapeIndex = shapeVal.id
                         console.log(this.clickedShapeIndex, 'pleasw')

@@ -10,24 +10,19 @@ const faqData = [
       "Slapdash is a fast, lightweight, and collaborative whiteboard tool designed for creating hand-drawn-style diagrams, flowcharts, and sketches effortlessly.",
   },
   {
-    question: "Can I use Slapdash offline?",
+    question: "How do I create a new drawing room?",
     answer:
-      "Yes, Slapdash supports offline mode, allowing you to work without an internet connection and sync changes when you're back online.",
+      "Click the 'Create Room' button on the homepage, give your room a name, and you'll get a unique room ID to share with collaborators.",
   },
   {
-    question: "Does Slapdash support real-time collaboration?",
+    question: "How do I collaborate with others?",
     answer:
-      "Yes, you can invite others via a shareable link and collaborate on drawings in real time.",
+      "Share your room ID with others, and they can join the same room to collaborate in real-time. All changes are synchronized instantly across all connected users.",
   },
   {
-    question: "Can I export my drawings in different formats?",
+    question: "What drawing tools are available?",
     answer:
-      "Absolutely! You can export your work as PNG, SVG, and JSON to use in other applications or continue editing later.",
-  },
-  {
-    question: "Can I create and reuse custom elements?",
-    answer:
-      "Yes, Slapdash allows you to save custom shapes, templates, and elements to speed up your workflow.",
+      "Slapdash includes rectangle, circle, diamond, line, arrow, pencil, text, and eraser tools. You can also resize and move shapes after drawing them.",
   },
 ];
 
