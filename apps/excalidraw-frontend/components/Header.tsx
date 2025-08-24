@@ -26,7 +26,7 @@ export const Header = () => {
             </svg>
           </div>
 
-          <div className="hidden md:flex">
+          {/* <div className="hidden md:flex">
             <nav className="flex items-center gap-8 text-sm">
               <a href="#" className="text-gray-700 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition">
                 Feature
@@ -38,7 +38,7 @@ export const Header = () => {
                 Pricing
               </a>
             </nav>
-          </div>
+          </div> */}
 
           <div className="flex gap-4 items-center">
             <button
