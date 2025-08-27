@@ -39,14 +39,14 @@ export const Hero = ()=>{
 
   // Background floating icons
   const floatingIcons = [
-    { Icon: Pencil, className: "absolute top-10 left-16 text-[#65e6bf] opacity-30 w-20 h-20", delay: 0.8 },
-    { Icon: Code, className: "absolute bottom-20 left-40 text-[#65e6bf] opacity-20 w-24 h-24", delay: 0.5 },
-    { Icon: Triangle, className: "absolute top-20 right-32 text-[#65e6bf] opacity-25 w-16 h-16", delay: 0.9 },
-    { Icon: Sparkles, className: "absolute bottom-10 right-16 text-[#65e6bf] opacity-20 w-24 h-24", delay: 0.2 },
-    { Icon: Palette, className: "absolute top-40 left-10 text-[#65e6bf] opacity-15 w-18 h-18", delay: 1.1 },
-    { Icon: Users, className: "absolute bottom-40 right-10 text-[#65e6bf] opacity-25 w-20 h-20", delay: 0.6 },
-    { Icon: Shapes, className: "absolute top-60 right-20 text-[#65e6bf] opacity-20 w-16 h-16", delay: 1.3 },
-    { Icon: MousePointer, className: "absolute bottom-60 left-20 text-[#65e6bf] opacity-15 w-18 h-18", delay: 0.4 },
+    { Icon: Pencil, className: "absolute top-2 left-4 md:top-10 md:left-16 text-[#65e6bf] opacity-30 w-14 h-14 md:w-20 md:h-20", delay: 0.8 },
+    { Icon: Code, className: "absolute bottom-12 left-16 md:bottom-20 md:left-40 text-[#65e6bf] opacity-20 w-18 h-18 md:w-24 md:h-24", delay: 0.5 },
+    { Icon: Triangle, className: "absolute top-12 right-12 md:top-20 md:right-32 text-[#65e6bf] opacity-25 w-10 h-10 md:w-16 md:h-16", delay: 0.9 },
+    { Icon: Sparkles, className: "absolute bottom-4 right-4 md:bottom-10 md:right-16 text-[#65e6bf] opacity-20 w-18 h-18 md:w-24 md:h-24", delay: 0.2 },
+    { Icon: Palette, className: "absolute top-24 left-2 md:top-40 md:left-10 text-[#65e6bf] opacity-15 w-12 h-12 md:w-18 md:h-18", delay: 1.1 },
+    { Icon: Users, className: "absolute bottom-24 right-2 md:bottom-40 md:right-10 text-[#65e6bf] opacity-25 w-14 h-14 md:w-20 md:h-20", delay: 0.6 },
+    { Icon: Shapes, className: "absolute top-36 right-6 md:top-60 md:right-20 text-[#65e6bf] opacity-20 w-10 h-10 md:w-16 md:h-16", delay: 1.3 },
+    { Icon: MousePointer, className: "absolute bottom-36 left-6 md:bottom-60 md:left-20 text-[#65e6bf] opacity-15 w-12 h-12 md:w-18 md:h-18", delay: 0.4 },
   ];
 
   const router = useRouter()

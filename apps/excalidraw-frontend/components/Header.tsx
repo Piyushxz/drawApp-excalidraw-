@@ -9,7 +9,7 @@ export const Header = () => {
   const isDark = theme === 'dark';
 
   return (
-    <header className="py-2 border-b border-gray-200 dark:border-white/15 md:border-none fixed top-0 left-0 w-full z-50">
+    <header className="md:py-2 py-0 border-b border-gray-200 dark:border-white/15 md:border-none fixed top-0 left-0 w-full z-50">
       <div className="container mx-auto px-2">
         <div className="flex justify-between items-center bg-white/70 dark:bg-neutral-950/70 backdrop-blur md:border md:border-gray-200 dark:md:border-white/15 p-2 rounded-lg max-w-5xl mx-auto">
           <div className="p-1.5 rounded-lg border border-gray-200 dark:border-white/15">

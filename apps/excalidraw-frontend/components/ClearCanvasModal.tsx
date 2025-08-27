@@ -17,7 +17,6 @@ export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal,g
     useEffect(()=>{
         return()=>{
             document.body.style.pointerEvents = 'auto';
-            document.body.style.userSelect = 'auto';
         }
     },[])
     

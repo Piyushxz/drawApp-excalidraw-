@@ -15,7 +15,7 @@ export const PanningOptionBar = ({ zoom, onZoomChange }: PanningOptionBarProps) 
     };
 
     return (
-        <div className="fixed bottom-0 left-0 p-5">
+        <div className="fixed bottom-0 left-0 p-5 md:flex hidden">
             <div className="flex items-center bg-[#191919] cursor-pointer rounded-lg">
                 <div
                     className="text-white px-4 py-2 hover:bg-gray-800 rounded-l-lg"

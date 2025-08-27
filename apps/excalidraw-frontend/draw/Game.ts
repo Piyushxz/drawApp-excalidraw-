@@ -128,6 +128,14 @@ export class Game {
     private zoom: number = 100;
     private panOffset: Point = { x: 0, y: 0 };
 
+    // Touch gesture state for panning and zooming
+    private isPanning = false;
+    private isZooming = false;
+    private lastTouchDistance = 0;
+    private lastTouchCenter = { x: 0, y: 0 };
+    private initialZoom = 100;
+    private initialPanOffset = { x: 0, y: 0 };
+
     socket: WebSocket;
     private onCanvasUpdate?: () => void; // Callback for canvas updates
 
@@ -147,6 +155,9 @@ export class Game {
         
         // Set initial theme based on parameter
         this.isDarkTheme = initialTheme === 'dark' || (initialTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        // Mobile optimizations
+        this.setupMobileOptimizations();
         
         this.renderCanvas();
         this.updateCursor(); // Set initial cursor
@@ -207,6 +218,21 @@ export class Game {
         return {
             x: canvasX * scale + this.panOffset.x,
             y: canvasY * scale + this.panOffset.y
+        };
+    }
+
+    // Helper method to calculate distance between two points
+    private getDistance(p1: { x: number, y: number }, p2: { x: number, y: number }): number {
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Helper method to calculate center point between two touches
+    private getTouchCenter(touch1: Touch, touch2: Touch): { x: number, y: number } {
+        return {
+            x: (touch1.clientX + touch2.clientX) / 2,
+            y: (touch1.clientY + touch2.clientY) / 2
         };
     }
 
@@ -443,11 +469,15 @@ export class Game {
     }
     
     destroy() {
+        // Remove mouse event listeners
         this.canvas.removeEventListener("mousedown", this.mouseDownHandler)
-
         this.canvas.removeEventListener("mouseup", this.mouseUpHandler)
-
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler)
+
+        // Remove touch event listeners
+        this.canvas.removeEventListener("touchstart", this.touchStartHandler)
+        this.canvas.removeEventListener("touchend", this.touchEndHandler)
+        this.canvas.removeEventListener("touchmove", this.touchMoveHandler)
     }
 
     setTool(tool: Tool) {
@@ -551,6 +581,27 @@ export class Game {
             y >= bounds.minY - handleOffset && y <= bounds.minY + handleSize + handleOffset) return 'nw';
         
         return '';
+    }
+
+    // Mobile optimizations to prevent zooming and scrolling
+    private setupMobileOptimizations() {
+        // Prevent zooming on double tap
+        let lastTouchEnd = 0;
+        this.canvas.addEventListener('touchend', (event) => {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Prevent context menu on long press
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Allow touch gestures for panning and zooming, but prevent browser zoom
+        this.canvas.style.touchAction = 'manipulation';
     }
 
     // Method to update cursor based on selected tool
@@ -1254,6 +1305,124 @@ export class Game {
 
 
     }
+    // Touch event handlers for mobile support
+    touchStartHandler = (e: TouchEvent) => {
+        e.preventDefault();
+        
+        if (e.touches.length === 1) {
+            // Single touch - handle drawing or panning based on selected tool
+            if (this.selectedTool === 'hand') {
+                // Start panning
+                this.isPanning = true;
+                this.initialPanOffset = { ...this.panOffset };
+                const touch = e.touches[0];
+                this.lastTouchCenter = { x: touch.clientX, y: touch.clientY };
+            } else {
+                // Handle drawing tools
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    button: 0
+                });
+                this.mouseDownHandler(mouseEvent);
+            }
+        } else if (e.touches.length === 2) {
+            // Two touches - start zooming
+            this.isZooming = true;
+            this.initialZoom = this.zoom;
+            this.initialPanOffset = { ...this.panOffset };
+            
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            this.lastTouchDistance = this.getDistance(
+                { x: touch1.clientX, y: touch1.clientY },
+                { x: touch2.clientX, y: touch2.clientY }
+            );
+            this.lastTouchCenter = this.getTouchCenter(touch1, touch2);
+        }
+    };
+
+    touchEndHandler = (e: TouchEvent) => {
+        e.preventDefault();
+        
+        // Stop panning and zooming
+        this.isPanning = false;
+        this.isZooming = false;
+        
+        if (e.touches.length === 0) {
+            // All touches ended - handle drawing tools
+            if (this.clicked && this.selectedTool !== 'hand') {
+                const touch = e.changedTouches[0];
+                const mouseEvent = new MouseEvent('mouseup', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    button: 0
+                });
+                this.mouseUpHandler(mouseEvent);
+            }
+        }
+    };
+
+    touchMoveHandler = (e: TouchEvent) => {
+        e.preventDefault();
+        
+        if (this.isPanning && e.touches.length === 1) {
+            // Handle panning
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - this.lastTouchCenter.x;
+            const deltaY = touch.clientY - this.lastTouchCenter.y;
+            
+            this.panOffset.x = this.initialPanOffset.x + deltaX;
+            this.panOffset.y = this.initialPanOffset.y + deltaY;
+            
+            this.renderCanvas();
+        } else if (this.isZooming && e.touches.length === 2) {
+            // Handle zooming
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const currentDistance = this.getDistance(
+                { x: touch1.clientX, y: touch1.clientY },
+                { x: touch2.clientX, y: touch2.clientY }
+            );
+            const currentCenter = this.getTouchCenter(touch1, touch2);
+            
+            // Calculate zoom factor
+            const zoomFactor = currentDistance / this.lastTouchDistance;
+            const newZoom = Math.max(25, Math.min(400, this.initialZoom * zoomFactor));
+            
+            // Calculate the zoom center in canvas coordinates
+            const zoomCenterCanvas = this.screenToCanvas(currentCenter.x, currentCenter.y);
+            const initialZoomCenterCanvas = this.screenToCanvas(this.lastTouchCenter.x, this.lastTouchCenter.y);
+            
+            // Calculate how much the zoom center has moved in canvas coordinates
+            const canvasDeltaX = zoomCenterCanvas.x - initialZoomCenterCanvas.x;
+            const canvasDeltaY = zoomCenterCanvas.y - initialZoomCenterCanvas.y;
+            
+            // Calculate scale change
+            const scaleChange = newZoom / this.initialZoom;
+            
+            // Update zoom
+            this.zoom = newZoom;
+            
+            // Adjust pan to keep the zoom center point fixed
+            // The formula: newPan = initialPan - (canvasDelta * (scaleChange - 1))
+            this.panOffset.x = this.initialPanOffset.x - (canvasDeltaX * (scaleChange - 1));
+            this.panOffset.y = this.initialPanOffset.y - (canvasDeltaY * (scaleChange - 1));
+            
+            this.renderCanvas();
+        } else if (e.touches.length === 1 && !this.isPanning && !this.isZooming) {
+            // Handle drawing tools
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                button: 0
+            });
+            this.mouseMoveHandler(mouseEvent);
+        }
+    };
+
     mouseMoveHandler = (e:MouseEvent) => {
         if (this.clicked) {
             const transformedCoords = this.screenToCanvas(e.clientX, e.clientY);
@@ -1554,26 +1723,37 @@ export class Game {
                 const startX = this.resizeStartData.x;
                 const startY = this.resizeStartData.y;
                 
-                // For text, use the larger of deltaX or deltaY, but respect the direction
+                // Calculate font size change based on the larger delta
                 const sizeChange = Math.max(Math.abs(deltaX), Math.abs(deltaY));
-                const direction = (deltaX > 0 || deltaY > 0) ? 1 : -1;
                 
                 switch (this.resizeHandle) {
-                    case 'se': // bottom-right - increase/decrease font size, keep left edge fixed
-                        const newFontSizeSE = Math.max(8, startFontSize + (sizeChange * direction));
-                        text.fontSize = newFontSizeSE;
+                    case 'se': // bottom-right - dragging right/down should increase font size
+                        const directionSE = (deltaX > 0 || deltaY > 0) ? 1 : -1;
+                        text.fontSize = Math.max(8, startFontSize + (sizeChange * directionSE));
+                        // Position stays the same (top-left corner fixed)
                         break;
-                    case 'sw': // bottom-left - increase/decrease font size, keep right edge fixed
-                        const newFontSizeSW = Math.max(8, startFontSize + (sizeChange * direction));
-                        text.fontSize = newFontSizeSW;
+                    case 'sw': // bottom-left - dragging left/down should increase font size
+                        const directionSW = (deltaX < 0 || deltaY > 0) ? 1 : -1;
+                        text.fontSize = Math.max(8, startFontSize + (sizeChange * directionSW));
+                        // Adjust X position to keep right edge fixed
+                        const rightEdgeOffset = (text.fontSize - startFontSize) * 0.6; // Approximate character width ratio
+                        text.x = startX - rightEdgeOffset;
                         break;
-                    case 'ne': // top-right - increase/decrease font size, keep left edge fixed
-                        const newFontSizeNE = Math.max(8, startFontSize + (sizeChange * direction));
-                        text.fontSize = newFontSizeNE;
+                    case 'ne': // top-right - dragging right/up should increase font size
+                        const directionNE = (deltaX > 0 || deltaY < 0) ? 1 : -1;
+                        text.fontSize = Math.max(8, startFontSize + (sizeChange * directionNE));
+                        // Adjust Y position to keep bottom edge fixed
+                        const bottomEdgeOffset = text.fontSize - startFontSize;
+                        text.y = startY - bottomEdgeOffset;
                         break;
-                    case 'nw': // top-left - increase/decrease font size, keep right edge fixed
-                        const newFontSizeNW = Math.max(8, startFontSize + (sizeChange * direction));
-                        text.fontSize = newFontSizeNW;
+                    case 'nw': // top-left - dragging left/up should increase font size
+                        const directionNW = (deltaX < 0 || deltaY < 0) ? 1 : -1;
+                        text.fontSize = Math.max(8, startFontSize + (sizeChange * directionNW));
+                        // Adjust both X and Y positions to keep bottom-right corner fixed
+                        const nwRightEdgeOffset = (text.fontSize - startFontSize) * 0.6; // Approximate character width ratio
+                        const nwBottomEdgeOffset = text.fontSize - startFontSize;
+                        text.x = startX - nwRightEdgeOffset;
+                        text.y = startY - nwBottomEdgeOffset;
                         break;
                 }
             }
@@ -1666,12 +1846,19 @@ export class Game {
     
 
     initMouseHandlers() {
+        // Mouse events for desktop
         this.canvas.addEventListener("mousedown", this.mouseDownHandler)
-
         this.canvas.addEventListener("mouseup", this.mouseUpHandler)
+        this.canvas.addEventListener("mousemove", this.mouseMoveHandler)
 
-        this.canvas.addEventListener("mousemove", this.mouseMoveHandler)    
+        // Touch events for mobile
+        this.canvas.addEventListener("touchstart", this.touchStartHandler, { passive: false })
+        this.canvas.addEventListener("touchend", this.touchEndHandler, { passive: false })
+        this.canvas.addEventListener("touchmove", this.touchMoveHandler, { passive: false })
 
+        // Prevent default touch behaviors that might interfere
+        this.canvas.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false })
+        this.canvas.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false })
     }
 
 

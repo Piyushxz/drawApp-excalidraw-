@@ -8,11 +8,11 @@ import { useZoomPan } from "@/hooks/usePanning";
 import { Point } from "@/draw/Game";
 import { Session } from "next-auth";
 import { ShapeConfigModal } from "./ShapeConfigModal";
-import { Menu } from "./Menu";
+import { Menu, MobileMenu } from "./Menu";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ClearCanvasModal } from "./ClearCanvasModal";
 import { LiveCollaborationModal } from "./LiveCollaboration";
-
+import { DisconnectedModal } from "./DisconnectedModal";
 
 export default function ClientCanvas({ roomId, socket,session }: { roomId: string; socket: WebSocket ,session:Session }) {
 
@@ -26,6 +26,8 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
     const [showClearCanvasModal, setShowClearCanvasModal] = useState(false);
     const [canvasUpdateTrigger, setCanvasUpdateTrigger] = useState(0); // Force re-render when canvas updates
     const [showLiveCollaborationModal, setShowLiveCollaborationModal] = useState(false);
+    const [showDisconnectedModal, setShowDisconnectedModal] = useState(false);
+    const [isConnected, setIsConnected] = useState(true);
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(100); // Default zoom (100%)
@@ -88,8 +90,12 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             console.log("Shape selection changed:", currentIndex, currentShape);
             setShapeSelectionState({ index: currentIndex, shape: currentShape });
             
+            const isDesktop = window.innerWidth >= 768;
+            
             if (currentIndex !== undefined && currentIndex !== -1) {
-                setShowShapeConfigModal(true);
+                if (isDesktop) {
+                    setShowShapeConfigModal(true);
+                }
             } else {
                 setShowShapeConfigModal(false);
             }
@@ -119,9 +125,60 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
         game:game
     });
 
+    // WebSocket disconnect detection
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleOpen = () => {
+            console.log("WebSocket connected");
+            setIsConnected(true);
+            setShowDisconnectedModal(false);
+        };
+
+        const handleError = (error: Event) => {
+            console.error("WebSocket error:", error);
+            setIsConnected(false);
+            setShowDisconnectedModal(true);
+        };
+
+        const handleClose = (event: CloseEvent) => {
+            console.log("WebSocket closed:", event.code, event.reason);
+            setIsConnected(false);
+            if (event.code !== 1000) { // 1000 is normal closure
+                setShowDisconnectedModal(true);
+            }
+        };
+
+        // Add event listeners
+        socket.addEventListener('open', handleOpen);
+        socket.addEventListener('close', handleClose);
+        socket.addEventListener('error', handleError);
+
+        // Check initial connection status
+        if (socket.readyState === WebSocket.OPEN) {
+            setIsConnected(true);
+        } else if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+            setIsConnected(false);
+            setShowDisconnectedModal(true);
+        }
+
+        // Cleanup event listeners
+        return () => {
+            socket.removeEventListener('open', handleOpen);
+            socket.removeEventListener('close', handleClose);
+            socket.removeEventListener('error', handleError);
+        };
+    }, [socket]);
+
 
     return (
         <div className={`h-[100vh] w-full overflow-hidden ${theme === 'dark' ? 'dark' : ''}`}>
+            {/* Connection Status Indicator */}
+            {!isConnected && (
+                <div className="fixed top-4 right-4 z-[9998] bg-red-500 text-white px-3 py-1 rounded-lg text-sm font-medium shadow-lg">
+                    Disconnected
+                </div>
+            )}
             {
                     showTextInput && (
                         <div 
@@ -173,6 +230,13 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
                     )
             }
             <Menu game={game!} setShowLiveCollaborationModal={setShowLiveCollaborationModal} setShowClearCanvasModal={setShowClearCanvasModal} />
+            <MobileMenu 
+                game={game!} 
+                setShowLiveCollaborationModal={setShowLiveCollaborationModal} 
+                setShowClearCanvasModal={setShowClearCanvasModal}
+                hasSelectedShape={shapeSelectionState.index !== -1}
+                onEditClick={() => setShowShapeConfigModal(s=>!s)}
+            />
             
             <ShapeOptionBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
             <canvas className="z-[9999]" ref={canvasRef}></canvas>
@@ -187,6 +251,7 @@ export default function ClientCanvas({ roomId, socket,session }: { roomId: strin
             />
             { showClearCanvasModal &&  <ClearCanvasModal game={game!} setShowClearCanvasModal={setShowClearCanvasModal} showClearCanvasModal={showClearCanvasModal}/>}
             { showLiveCollaborationModal &&  <LiveCollaborationModal game={game!} setShowLiveCollaborationModal={setShowLiveCollaborationModal} showLiveCollaborationModal={showLiveCollaborationModal}/>}
+            { showDisconnectedModal &&  <DisconnectedModal game={game!} setShowDisconnectedModal={setShowDisconnectedModal} showDisconnectedModal={showDisconnectedModal}/>}
         </div>
     );
 } 

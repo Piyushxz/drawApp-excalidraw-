@@ -7,6 +7,6 @@ export interface iconType{
 
 export const iconStyles={
     sm : "w-2" ,
-    md :"w-4",
+    md :" md:w-6 md:h-6 w-4 h-4",
     lg:"w-8 h-8 "
 }
