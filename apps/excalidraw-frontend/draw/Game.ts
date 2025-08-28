@@ -309,12 +309,11 @@ export class Game {
         const width = bounds.maxX - bounds.minX;
         const height = bounds.maxY - bounds.minY;
         
-        // Draw selection box (dashed border)
+        // Draw selection box 
         this.ctx.strokeStyle = "#0096FF";
-        this.ctx.lineWidth = 1;
-        this.ctx.setLineDash([4, 4]);
+        this.ctx.lineWidth = 1.5;
+        this.ctx.setLineDash([]); // Solid line, no dashes
         this.ctx.strokeRect(bounds.minX, bounds.minY, width, height);
-        this.ctx.setLineDash([]);
         
         // Draw resize handles
         this.drawResizeHandles(bounds.minX, bounds.minY, width, height);
@@ -322,14 +321,14 @@ export class Game {
 
     // Helper method to draw resize handles
     private drawResizeHandles(x: number, y: number, width: number, height: number) {
-        const handleSize = 6; // Smaller handles like Excalidraw
+        const handleSize = 10; // Larger handles like Excalidraw
         const handleColor = "#0096FF";
-        const handleFillColor = "#ffffff";
-        const handleOffset = 2;
+        const handleFillColor = this.isDarkTheme ? "rgba(18,18,18,255)" : "rgba(255, 255, 255, 1)"; // Canvas background color
+        const handleOffset = 3; // Slightly more offset for larger handles
         
         this.ctx.fillStyle = handleFillColor;
         this.ctx.strokeStyle = handleColor;
-        this.ctx.lineWidth = 1.5;
+        this.ctx.lineWidth = 2; // Thicker border for better visibility
         
         // Corner handles only (4 handles)
         const handles = [
@@ -342,7 +341,7 @@ export class Game {
         handles.forEach(handle => {
             // Draw handle with rounded corners (like Excalidraw)
             this.ctx.beginPath();
-            this.ctx.roundRect(handle.x, handle.y, handleSize, handleSize, 2);
+            this.ctx.roundRect(handle.x, handle.y, handleSize, handleSize, 3);
             this.ctx.fill();
             this.ctx.stroke();
         });
@@ -567,8 +566,8 @@ export class Game {
         const bounds = this.getSelectionBoxBounds();
         if (!bounds) return '';
         
-        const handleSize = 6; // Smaller handles like Excalidraw
-        const handleOffset = 2; // Slight offset from selection box
+        const handleSize = 10; // Larger handles like Excalidraw
+        const handleOffset = 3; // Slight offset from selection box
         
         // Check corners only (4 handles)
         if (x >= bounds.maxX - handleSize - handleOffset && x <= bounds.maxX + handleOffset && 

@@ -11,6 +11,8 @@ export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal,g
             e.preventDefault();
         }
         setShowClearCanvasModal(false);
+        document.body.style.pointerEvents = 'auto';
+
         
     };
 
@@ -22,6 +24,9 @@ export const ClearCanvasModal = ({setShowClearCanvasModal,showClearCanvasModal,g
     
     return (
     <AlertDialog open={showClearCanvasModal} onOpenChange={(open) => {
+        if (!open) {
+            handleClose();
+        }
     }} >
     <AlertDialogContent 
         onClick={(e) => e.stopPropagation()}
