@@ -1,1 +1,1 @@
-{"/_not-found/page":"/_not-found","/api/auth/[...nextauth]/route":"/api/auth/[...nextauth]","/favicon.ico/route":"/favicon.ico","/canvas/[roomID]/page":"/canvas/[roomID]","/dashboard/page":"/dashboard","/page":"/","/(auth)/signup/page":"/signup","/(auth)/signin/page":"/signin"}
+{"/_not-found/page":"/_not-found","/api/auth/[...nextauth]/route":"/api/auth/[...nextauth]","/favicon.ico/route":"/favicon.ico","/canvas/[roomID]/page":"/canvas/[roomID]","/dashboard/page":"/dashboard","/page":"/","/(auth)/signin/page":"/signin","/(auth)/signup/page":"/signup"}

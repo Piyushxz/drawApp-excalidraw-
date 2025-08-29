@@ -314,34 +314,89 @@ export class Game {
         this.ctx.lineWidth = 1.5;
         this.ctx.setLineDash([]); // Solid line, no dashes
         this.ctx.strokeRect(bounds.minX, bounds.minY, width, height);
-        
-        // Draw resize handles
-        this.drawResizeHandles(bounds.minX, bounds.minY, width, height);
     }
 
     // Helper method to draw resize handles
     private drawResizeHandles(x: number, y: number, width: number, height: number) {
-        const handleSize = 10; // Larger handles like Excalidraw
+        const handleSize = 10; // Base handle size in screen pixels
         const handleColor = "#0096FF";
         const handleFillColor = this.isDarkTheme ? "rgba(18,18,18,255)" : "rgba(255, 255, 255, 1)"; // Canvas background color
         const handleOffset = 3; // Slightly more offset for larger handles
+        
+        // Convert canvas coordinates to screen coordinates for consistent handle size
+        const scale = this.zoom / 100;
+        const screenX = x * scale + this.panOffset.x;
+        const screenY = y * scale + this.panOffset.y;
+        const screenWidth = width * scale;
+        const screenHeight = height * scale;
+        
+        // Adjust handle size and offset for screen coordinates
+        const screenHandleSize = handleSize;
+        const screenHandleOffset = handleOffset * scale;
         
         this.ctx.fillStyle = handleFillColor;
         this.ctx.strokeStyle = handleColor;
         this.ctx.lineWidth = 2; // Thicker border for better visibility
         
-        // Corner handles only (4 handles)
+        // Corner handles only (4 handles) in screen coordinates
         const handles = [
-            { x: x - handleOffset, y: y - handleOffset }, // nw
-            { x: x + width - handleSize + handleOffset, y: y - handleOffset }, // ne
-            { x: x + width - handleSize + handleOffset, y: y + height - handleSize + handleOffset }, // se
-            { x: x - handleOffset, y: y + height - handleSize + handleOffset } // sw
+            { x: screenX - screenHandleOffset, y: screenY - screenHandleOffset }, // nw
+            { x: screenX + screenWidth - screenHandleSize + screenHandleOffset, y: screenY - screenHandleOffset }, // ne
+            { x: screenX + screenWidth - screenHandleSize + screenHandleOffset, y: screenY + screenHeight - screenHandleSize + screenHandleOffset }, // se
+            { x: screenX - screenHandleOffset, y: screenY + screenHeight - screenHandleSize + screenHandleOffset } // sw
         ];
         
         handles.forEach(handle => {
             // Draw handle with rounded corners (like Excalidraw)
             this.ctx.beginPath();
-            this.ctx.roundRect(handle.x, handle.y, handleSize, handleSize, 3);
+            this.ctx.roundRect(handle.x, handle.y, screenHandleSize, screenHandleSize, 3);
+            this.ctx.fill();
+            this.ctx.stroke();
+        });
+    }
+
+    // Helper method to draw resize handles in screen coordinates
+    private drawResizeHandlesScreen() {
+        if (!this.clickedShape) return;
+        
+        const bounds = this.getSelectionBoxBounds();
+        if (!bounds) return;
+        
+        const width = bounds.maxX - bounds.minX;
+        const height = bounds.maxY - bounds.minY;
+        
+        const handleSize = 10; // Base handle size in screen pixels
+        const handleColor = "#0096FF";
+        const handleFillColor = this.isDarkTheme ? "rgba(18,18,18,255)" : "rgba(255, 255, 255, 1)"; // Canvas background color
+        const handleOffset = 3; // Slightly more offset for larger handles
+        
+        // Convert canvas coordinates to screen coordinates for consistent handle size
+        const scale = this.zoom / 100;
+        const screenX = bounds.minX * scale + this.panOffset.x;
+        const screenY = bounds.minY * scale + this.panOffset.y;
+        const screenWidth = width * scale;
+        const screenHeight = height * scale;
+        
+        // Adjust handle size and offset for screen coordinates
+        const screenHandleSize = handleSize;
+        const screenHandleOffset = handleOffset * scale;
+        
+        this.ctx.fillStyle = handleFillColor;
+        this.ctx.strokeStyle = handleColor;
+        this.ctx.lineWidth = 2; // Thicker border for better visibility
+        
+        // Corner handles only (4 handles) in screen coordinates
+        const handles = [
+            { x: screenX - screenHandleOffset, y: screenY - screenHandleOffset }, // nw
+            { x: screenX + screenWidth - screenHandleSize + screenHandleOffset, y: screenY - screenHandleOffset }, // ne
+            { x: screenX + screenWidth - screenHandleSize + screenHandleOffset, y: screenY + screenHeight - screenHandleSize + screenHandleOffset }, // se
+            { x: screenX - screenHandleOffset, y: screenY + screenHeight - screenHandleSize + screenHandleOffset } // sw
+        ];
+        
+        handles.forEach(handle => {
+            // Draw handle with rounded corners (like Excalidraw)
+            this.ctx.beginPath();
+            this.ctx.roundRect(handle.x, handle.y, screenHandleSize, screenHandleSize, 3);
             this.ctx.fill();
             this.ctx.stroke();
         });
@@ -566,18 +621,23 @@ export class Game {
         const bounds = this.getSelectionBoxBounds();
         if (!bounds) return '';
         
-        const handleSize = 10; // Larger handles like Excalidraw
+        const handleSize = 10; // Base handle size in screen pixels
         const handleOffset = 3; // Slight offset from selection box
         
-        // Check corners only (4 handles)
-        if (x >= bounds.maxX - handleSize - handleOffset && x <= bounds.maxX + handleOffset && 
-            y >= bounds.maxY - handleSize - handleOffset && y <= bounds.maxY + handleOffset) return 'se';
-        if (x >= bounds.minX - handleOffset && x <= bounds.minX + handleSize + handleOffset && 
-            y >= bounds.maxY - handleSize - handleOffset && y <= bounds.maxY + handleOffset) return 'sw';
-        if (x >= bounds.maxX - handleSize - handleOffset && x <= bounds.maxX + handleOffset && 
-            y >= bounds.minY - handleOffset && y <= bounds.minY + handleSize + handleOffset) return 'ne';
-        if (x >= bounds.minX - handleOffset && x <= bounds.minX + handleSize + handleOffset && 
-            y >= bounds.minY - handleOffset && y <= bounds.minY + handleSize + handleOffset) return 'nw';
+        // Convert handle size from screen pixels to canvas coordinates
+        const scale = this.zoom / 100;
+        const canvasHandleSize = handleSize / scale;
+        const canvasHandleOffset = handleOffset / scale;
+        
+        // Check corners only (4 handles) in canvas coordinates
+        if (x >= bounds.maxX - canvasHandleSize - canvasHandleOffset && x <= bounds.maxX + canvasHandleOffset && 
+            y >= bounds.maxY - canvasHandleSize - canvasHandleOffset && y <= bounds.maxY + canvasHandleOffset) return 'se';
+        if (x >= bounds.minX - canvasHandleOffset && x <= bounds.minX + canvasHandleSize + canvasHandleOffset && 
+            y >= bounds.maxY - canvasHandleSize - canvasHandleOffset && y <= bounds.maxY + canvasHandleOffset) return 'sw';
+        if (x >= bounds.maxX - canvasHandleSize - canvasHandleOffset && x <= bounds.maxX + canvasHandleOffset && 
+            y >= bounds.minY - canvasHandleOffset && y <= bounds.minY + canvasHandleSize + canvasHandleOffset) return 'ne';
+        if (x >= bounds.minX - canvasHandleOffset && x <= bounds.minX + canvasHandleSize + canvasHandleOffset && 
+            y >= bounds.minY - canvasHandleOffset && y <= bounds.minY + canvasHandleSize + canvasHandleOffset) return 'nw';
         
         return '';
     }
@@ -1010,11 +1070,14 @@ export class Game {
             }
         });
         
-        // Draw selection box and handles after all shapes are rendered
+        // Draw selection box after all shapes are rendered (in transformed coordinates)
         this.drawSelectionBox();
         
         // Restore transformations
         this.ctx.restore();
+        
+        // Draw resize handles in screen coordinates after context restore
+        this.drawResizeHandlesScreen();
     }
 
     mouseDownHandler = (e: MouseEvent) => {
